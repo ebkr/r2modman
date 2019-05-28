@@ -24,26 +24,27 @@ func (manager *ManagerScreen) Show() {
 
 func (manager *ManagerScreen) create() {
 
-	mainBox, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5)
-	mainBox.SetBorderWidth(10)
+	manager.window.SetSizeRequest(200, 400)
 
-	scroll, _ := gtk.ScrolledWindowNew(nil, nil)
-	scrollBox, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5)
-	scroll.Add(scrollBox)
+	mainBox, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 2)
+	buttonBox, _ := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 2)
 
-	grid, _ := gtk.GridNew()
-	grid.Attach(scroll, 0, 0, 8, 200)
+	scrollFrame, _ := gtk.ScrolledWindowNew(nil, nil)
+	scrollBox, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 2)
 
-	removeMod, _ := gtk.ButtonNewWithLabel("Delete")
-	updateMod, _ := gtk.ButtonNewWithLabel("Update")
-	play, _ := gtk.ButtonNewWithLabel("Play RoR2")
-	grid.Attach(removeMod, 0, 200, 2, 1)
-	grid.Attach(updateMod, 2, 200, 2, 1)
-	grid.Attach(play, 6, 200, 2, 1)
+	scrollFrame.Add(scrollBox)
 
-	grid.SetColumnSpacing(10)
+	delete, _ := gtk.ButtonNewWithLabel("Delete")
+	update, _ := gtk.ButtonNewWithLabel("Update")
+	play, _ := gtk.ButtonNewWithLabel("Play Risk of Rain 2")
 
-	mainBox.PackStart(grid, true, true, 0)
+	buttonBox.PackStart(delete, false, false, 2)
+	buttonBox.PackStart(update, false, false, 10)
+	buttonBox.PackEnd(play, false, false, 0)
+
+	mainBox.PackStart(scrollFrame, true, true, 2)
+	mainBox.PackEnd(buttonBox, false, true, 0)
+	manager.window.Add(mainBox)
 
 	mods := modfetch.GetMods()
 	mods = append(mods, modfetch.Mod{Name: "MyMod", URL: "http://..."})
@@ -54,5 +55,5 @@ func (manager *ManagerScreen) create() {
 		scrollBox.PackStart(cb, false, false, 2)
 	}
 
-	manager.window.Add(mainBox)
+	mainBox.SetBorderWidth(10)
 }

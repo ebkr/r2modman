@@ -48,8 +48,8 @@ func (splash *SplashScreen) create() {
 func (splash *SplashScreen) waitAndProgress(completed chan bool) {
 	frac := 0.0
 	for i := 0; i < 100; i++ {
-		splash.progBar.SetFraction(frac)
 		time.Sleep(time.Second / 100)
+		splash.progBar.SetFraction(frac)
 		frac += 0.01
 	}
 	time.Sleep(100)
