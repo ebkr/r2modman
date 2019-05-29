@@ -21,7 +21,7 @@ type modDependency struct {
 }
 
 // Mod : Struct to contain mod information
-type mod struct {
+type Mod struct {
 	Name         string
 	Description  string
 	URL          string
@@ -32,8 +32,8 @@ type mod struct {
 }
 
 // CreateMod : Used to create a mod object
-func createMod(name, description, url, version, path, uuid string) mod {
-	return mod{
+func createMod(name, description, url, version, path, uuid string) Mod {
+	return Mod{
 		Name:         name,
 		Description:  description,
 		URL:          url,
@@ -45,7 +45,7 @@ func createMod(name, description, url, version, path, uuid string) mod {
 }
 
 // AddDependencies : Used to add dependencies from a list
-func (mod *mod) AddDependencies(dependencies []string) {
+func (mod *Mod) AddDependencies(dependencies []string) {
 	list := []modDependency{}
 	for _, a := range dependencies {
 		split := strings.Split(a, "-")
@@ -74,12 +74,12 @@ func getVersion(v string) modVersion {
 }
 
 // GetMods : Get an array of mods
-func GetMods() []mod {
+func GetMods() []Mod {
 	file, fErr := os.Open("./mods/mods.json")
 	if os.IsNotExist(fErr) {
 		file, err := os.Create("./mods/mods.json")
 		if err != nil {
-			return []mod{}
+			return []Mod{}
 		}
 		file.Write([]byte("{}"))
 		file.Close()
@@ -90,7 +90,7 @@ func GetMods() []mod {
 		for scanner.Scan() {
 			text += scanner.Text()
 		}
-		data := []mod{}
+		data := []Mod{}
 		json.Unmarshal([]byte(text), &data)
 		file.Close()
 		return data
@@ -98,8 +98,8 @@ func GetMods() []mod {
 }
 
 // UpdateMods : Update the list of mods
-func UpdateMods(mods []mod) {
-	newList := []mod{}
+func UpdateMods(mods []Mod) {
+	newList := []Mod{}
 	for _, moda := range mods {
 		found := false
 		for _, modb := range newList {

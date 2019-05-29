@@ -32,7 +32,7 @@ func (manager *ManagerScreen) Show() {
 
 func (manager *ManagerScreen) create() {
 
-	manager.window.SetDefaultSize(400, 250)
+	manager.window.SetDefaultSize(400, 300)
 
 	mainBox, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 2)
 	mainBox.SetBorderWidth(10)
@@ -57,11 +57,17 @@ func (manager *ManagerScreen) create() {
 	scrollWindowAvailable.Add(listAvailable)
 
 	buttonBox, _ := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 2)
-	local, _ := gtk.ButtonNewWithLabel("Install Local Zip")
+	local, _ := gtk.ButtonNewFromIconName("list-add-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
 	play, _ := gtk.ButtonNewWithLabel("Play Risk of Rain 2")
+	getUpdates, _ := gtk.ButtonNewFromIconName("view-refresh-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
 
 	buttonBox.PackStart(local, false, true, 2)
+	buttonBox.PackStart(getUpdates, false, true, 2)
 	buttonBox.PackStart(play, false, true, 2)
+
+	getUpdates.Connect("clicked", func() {
+		manager.updateMods(listInstalled)
+	})
 
 	mainBox.PackEnd(buttonBox, false, true, 2)
 
@@ -131,27 +137,63 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 		delete, _ := gtk.ButtonNewFromIconName("window-close-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
 		delete.SetProperty("relief", gtk.RELIEF_NONE)
 		rowBox.PackEnd(delete, false, false, 2)
-		listBox.Add(row)
+
+		// Thunderstore Update Integration
+		if strings.Compare(mod.Uuid4, "") == 0 {
+			syncThunderstoreAlert, _ := gtk.ButtonNewFromIconName("dialog-warning-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+			func(m modfetch.Mod, button *gtk.Button) {
+				button.Connect("clicked", func() {
+					refreshedMods := modfetch.GetMods()
+					modfetch.ThunderstoreLocalToOnline(&m)
+					for i, a := range refreshedMods {
+						if strings.Compare(a.Name, m.Name) == 0 && strings.Compare(a.Description, m.Description) == 0 {
+							refreshedMods[i] = m
+							break
+						}
+					}
+					fmt.Println("Updating mods")
+					modfetch.UpdateMods(refreshedMods)
+					fmt.Println(refreshedMods[0])
+					manager.updateMods(listBox)
+				})
+			}(mod, syncThunderstoreAlert)
+			rowBox.PackEnd(syncThunderstoreAlert, false, false, 2)
+		} else {
+			func(m modfetch.Mod) {
+				if modfetch.ThunderstoreModHasUpdate(&m) {
+					updateAvailable, _ := gtk.ButtonNewFromIconName("software-update-urgent-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+					updateAvailable.Connect("clicked", func() {
+						// Do stuff
+					})
+					rowBox.PackEnd(updateAvailable, false, false, 2)
+				}
+			}(mod)
+
+		}
 
 		// Events
-		delete.Connect("clicked", func() {
-			refreshedMods := modfetch.GetMods()
-			index := -1
-			for i, a := range refreshedMods {
-				if strings.Compare(mod.Name, a.Name) == 0 {
-					err := os.RemoveAll(mod.Path)
-					if err != nil {
-						fmt.Println(err.Error())
+		func(m modfetch.Mod) {
+			delete.Connect("clicked", func() {
+				refreshedMods := modfetch.GetMods()
+				index := -1
+				for i, a := range refreshedMods {
+					if strings.Compare(m.Name, a.Name) == 0 {
+						err := os.RemoveAll(m.Path)
+						if err != nil {
+							fmt.Println(err.Error())
+						}
+						index = i
 					}
-					index = i
 				}
-			}
-			if index >= 0 {
-				refreshedMods = append(refreshedMods[:index], refreshedMods[index+1:]...)
-				modfetch.UpdateMods(refreshedMods)
-				manager.updateMods(listBox)
-			}
-		})
+				if index >= 0 {
+					refreshedMods = append(refreshedMods[:index], refreshedMods[index+1:]...)
+					modfetch.UpdateMods(refreshedMods)
+					manager.updateMods(listBox)
+				}
+			})
+		}(mod)
+
+		listBox.Add(row)
 
 		// End of loop
 	}

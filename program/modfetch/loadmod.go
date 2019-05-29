@@ -37,10 +37,10 @@ func Unzip(name, zipSource string) map[string]string {
 	return files
 }
 
-func MakeModFromManifest(manifestFile, uuid string) mod {
+func MakeModFromManifest(manifestFile, uuid string) Mod {
 	m, err := os.Open(manifestFile)
 	if err != nil {
-		return mod{}
+		return Mod{}
 	}
 	scanner := bufio.NewScanner(m)
 	text := ""
