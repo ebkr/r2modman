@@ -1,0 +1,7 @@
+{
+    "name": "SharedModLibrary",
+    "version_number": "2.1.1",
+    "website_url": "https://github.com/ToyDragon/ROR2ModShared",
+    "description": "Contains UI for enabling/disabling mods. For mod developers, it also adds an interface for interacting with chat commands.",
+	"dependencies": ["bbepis-BepInExPack-1.3.1"]
+}

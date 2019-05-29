@@ -1,0 +1,7 @@
+{
+    "name": "EngineerLunarCoinsFix",
+    "version_number": "1.0.5",
+    "website_url": "https://github.com/ToyDragon/ROR2ModEngineerLunarCoinFix",
+	"dependencies": ["bbepis-BepInExPack-1.3.1", "ToyDragon-SharedModLibrary-2.0.0"],
+    "description": "Kills from engineer turrets can't drop lunar coins, this mod fixes that. This does not prevent you from playing with unmodded clients since it is a bug fix."
+}
