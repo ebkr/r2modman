@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/gotk3/gotk3/gdk"
 
@@ -22,6 +24,7 @@ func (manager *ManagerScreen) Show() {
 	if manager.window == nil {
 		manager.init("r2modman")
 		manager.create()
+		manager.window.SetKeepAbove(false)
 		manager.window.Connect("destroy", func() {
 			gtk.MainQuit()
 		})
@@ -100,7 +103,69 @@ func (manager *ManagerScreen) create() {
 		})
 	})
 
-	go manager.downloadThunderstoreList(listAvailable)
+	_, exists := os.Open("./program/path.txt")
+	if os.IsNotExist(exists) {
+		play.SetLabel("Locate Risk of Rain 2")
+	}
+
+	play.Connect("clicked", func() {
+		// Symlink
+		file, exists := os.Open("./program/path.txt")
+		if os.IsNotExist(exists) {
+			tempf, creationErr := os.Create("./program/path.txt")
+			if creationErr != nil {
+				return
+			}
+			file = tempf
+			selector, _ := gtk.FileChooserNativeDialogNew("Select Risk of Rain 2 Location", manager.window, gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER, "Select Folder", "Cancel")
+			selector.Show()
+			selector.Connect("response", func() {
+				folder := selector.GetFilename()
+				fmt.Println("Folder:", folder)
+				file.Write([]byte(folder))
+				file.Close()
+				play.SetLabel("Play Risk of Rain 2")
+			})
+		} else {
+			data, _ := ioutil.ReadAll(file)
+			defer file.Close()
+			gamePath := string(data)
+			fmt.Println(gamePath)
+			_, searchErr := exec.LookPath(gamePath + "/Risk of Rain 2.exe")
+
+			if searchErr != nil {
+				fmt.Println("Path Error:", searchErr.Error())
+				os.Remove("./program/path.txt")
+			}
+			pluginPath := gamePath + "/BepInEx/plugins/"
+			os.MkdirAll(pluginPath, 0777)
+
+			dir, readDirErr := ioutil.ReadDir(pluginPath)
+			if readDirErr != nil {
+				fmt.Println("ReadDirErr:", readDirErr.Error())
+				return
+			}
+			for _, dirFile := range dir {
+				if dirFile.Mode() == os.ModeSymlink {
+					fmt.Println("Found sym")
+					os.RemoveAll(pluginPath + dirFile.Name())
+				}
+			}
+			mods := modfetch.GetMods()
+			for _, mod := range mods {
+				cwd, _ := os.Getwd()
+				modPathFixed := cwd + mod.Path[1:]
+				os.Symlink(modPathFixed, pluginPath+mod.Name)
+			}
+			go func() {
+				time.Sleep(10)
+				cmd := exec.Command("powershell", "-c", "start steam://run/632360")
+				cmd.Run()
+			}()
+		}
+	})
+
+	go manager.downloadThunderstoreList(listAvailable, listInstalled)
 
 }
 
@@ -150,9 +215,7 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 							break
 						}
 					}
-					fmt.Println("Updating mods")
 					modfetch.UpdateMods(refreshedMods)
-					fmt.Println(refreshedMods[0])
 					manager.updateMods(listBox)
 				})
 			}(mod, syncThunderstoreAlert)
@@ -162,7 +225,17 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 				if modfetch.ThunderstoreModHasUpdate(&m) {
 					updateAvailable, _ := gtk.ButtonNewFromIconName("software-update-urgent-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
 					updateAvailable.Connect("clicked", func() {
-						// Do stuff
+						updatedMod := modfetch.ThunderstoreUpdateMod(&m)
+						refreshedMods := modfetch.GetMods()
+						modfetch.ThunderstoreLocalToOnline(&m)
+						for i, a := range refreshedMods {
+							if strings.Compare(a.Uuid4, updatedMod.Uuid4) == 0 {
+								refreshedMods[i] = *updatedMod
+								break
+							}
+						}
+						modfetch.UpdateMods(refreshedMods)
+						manager.updateMods(listBox)
 					})
 					rowBox.PackEnd(updateAvailable, false, false, 2)
 				}
@@ -199,7 +272,7 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 	manager.window.ShowAll()
 }
 
-func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox) {
+func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox, installedBox *gtk.ListBox) {
 	listBox.GetChildren().Foreach(func(child interface{}) {
 		listBox.Remove(child.(gtk.IWidget))
 	})
@@ -221,6 +294,20 @@ func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox) {
 		download, _ := gtk.ButtonNewFromIconName("go-down-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
 		download.SetProperty("relief", gtk.RELIEF_NONE)
 		box.PackEnd(download, false, false, 2)
+
+		func(mod modfetch.ThunderstoreJSON) {
+			download.Connect("clicked", func() {
+				newMod := modfetch.ThunderstoreDownloadMod(mod.Uuid4)
+				if newMod == nil {
+					return
+				}
+				newMod.Uuid4 = mod.Uuid4
+				refreshedMods := modfetch.GetMods()
+				refreshedMods = append(refreshedMods, *newMod)
+				modfetch.UpdateMods(refreshedMods)
+				manager.updateMods(installedBox)
+			})
+		}(mod)
 	}
 	listBox.ShowAll()
 }

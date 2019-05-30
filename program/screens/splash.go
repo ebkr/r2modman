@@ -18,7 +18,7 @@ var progressBar *gtk.ProgressBar
 
 func (splash *SplashScreen) Show() {
 	if splash.window == nil {
-		splash.init("splash")
+		splash.init("r2modman")
 		splash.create()
 		splash.window.SetPosition(gtk.WIN_POS_CENTER)
 		splash.window.Connect("destroy", func() {

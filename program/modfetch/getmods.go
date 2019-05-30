@@ -66,6 +66,9 @@ func getVersion(v string) modVersion {
 		conv, _ := strconv.Atoi(num)
 		versionNumbers = append(versionNumbers, conv)
 	}
+	for i := len(versionNumbers); i < 3; i++ {
+		versionNumbers = append(versionNumbers, 0)
+	}
 	return modVersion{
 		Major: versionNumbers[0],
 		Minor: versionNumbers[1],

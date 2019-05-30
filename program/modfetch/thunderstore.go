@@ -3,8 +3,10 @@ package modfetch
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gotk3/gotk3/gdk"
@@ -141,8 +143,6 @@ func ThunderstoreModHasUpdate(mod *Mod) bool {
 	return false
 }
 
-func ThunderstoreUpdateMod(mod *Mod) {}
-
 // ThunderstoreReady : Check if values are initialised
 func ThunderstoreReady() bool {
 	return (onlineMods != nil && modPixbufs != nil)
@@ -151,4 +151,55 @@ func ThunderstoreReady() bool {
 // ThunderstoreGetPixbufFromUUID4 : Get pixbuf to be used for thumbnails
 func ThunderstoreGetPixbufFromUUID4(uuid4 string) *gdk.Pixbuf {
 	return modPixbufs[uuid4]
+}
+
+// ThunderstoreDownloadMod : Download a mod directly from the store.
+func ThunderstoreDownloadMod(uuid string) *Mod {
+	for _, a := range onlineMods {
+		if a.Uuid4 == uuid {
+			stream, err := http.Get(a.Versions[0].Download_url)
+			if err != nil {
+				return nil
+			}
+			defer stream.Body.Close()
+			created, creationErr := os.Create("./mods/" + a.Versions[0].Full_name + ".zip")
+			if creationErr != nil {
+				return nil
+			}
+			_, copyErr := io.Copy(created, stream.Body)
+			if copyErr != nil {
+				return nil
+			}
+
+			res := Unzip(a.Full_name, "./mods/"+a.Versions[0].Full_name+".zip")
+			val, exists := res["manifest.json"]
+			if exists {
+				created.Close()
+				mod := MakeModFromManifest(val, "")
+				deleteErr := os.RemoveAll("./mods/" + a.Versions[0].Full_name + ".zip")
+				if deleteErr != nil {
+					fmt.Println(deleteErr.Error())
+				}
+				//.Name = a.Name
+				//mod.Description = a.Versions[0].Description
+				//mod.
+				return &mod
+			}
+		}
+	}
+	return nil
+}
+
+// ThunderstoreUpdateMod : Update a mod
+func ThunderstoreUpdateMod(mod *Mod) *Mod {
+	if len(mod.Uuid4) == 0 {
+		return mod
+	}
+	newMod := ThunderstoreDownloadMod(mod.Uuid4)
+	if newMod == nil {
+		return mod
+	}
+	os.RemoveAll(mod.Path)
+	newMod.Uuid4 = mod.Uuid4
+	return newMod
 }

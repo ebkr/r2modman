@@ -11,8 +11,5 @@ func main() {
 	gtk.Init(&os.Args)
 	splash := screens.SplashScreen{}
 	splash.Show()
-	//mainScreen := screens.ManagerScreen{}
-	//mainScreen.Show()
-	//time.Sleep(100)
 	gtk.Main()
 }
