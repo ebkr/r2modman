@@ -3,7 +3,6 @@ package screens
 import (
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"strings"
 
@@ -201,7 +200,6 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 }
 
 func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox) {
-	modfetch.ThunderstoreGenerateList()
 	listBox.GetChildren().Foreach(func(child interface{}) {
 		listBox.Remove(child.(gtk.IWidget))
 	})
@@ -214,25 +212,15 @@ func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox) {
 		image, _ := gtk.ImageNew()
 		box.PackStart(image, false, false, 5)
 		if len(mod.Versions[0].Icon) > 0 {
-			image.SetFromPixbuf(pixbufFromURL(mod.Versions[0].Icon))
+			image.SetFromPixbuf(modfetch.ThunderstoreGetPixbufFromUUID4(mod.Uuid4))
 		}
 
 		label, _ := gtk.LabelNew(mod.Name)
 		box.PackStart(label, false, false, 2)
 
-		download, _ := gtk.ButtonNewFromIconName("emblem-downloads-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+		download, _ := gtk.ButtonNewFromIconName("go-down-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+		download.SetProperty("relief", gtk.RELIEF_NONE)
 		box.PackEnd(download, false, false, 2)
 	}
 	listBox.ShowAll()
-}
-
-func pixbufFromURL(url string) *gdk.Pixbuf {
-	pbloader, _ := gdk.PixbufLoaderNew()
-	pbloader.SetSize(32, 32)
-	stream, _ := http.Get(url)
-	r, _ := ioutil.ReadAll(stream.Body)
-	pbloader.Write(r)
-	stream.Body.Close()
-	pix, _ := pbloader.GetPixbuf()
-	return pix
 }

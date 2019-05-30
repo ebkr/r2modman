@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gotk3/gotk3/gdk"
+
 	"github.com/gotk3/gotk3/gtk"
 )
 
@@ -39,9 +41,10 @@ type ThunderstoreJSON struct {
 }
 
 var onlineMods []ThunderstoreJSON
+var modPixbufs map[string]*gdk.Pixbuf
 
 // ThunderstoreGenerateList : Get latest version of thunderstore data
-func ThunderstoreGenerateList() {
+func ThunderstoreGenerateList(progression chan float64) {
 	if onlineMods != nil {
 		return
 	}
@@ -50,11 +53,33 @@ func ThunderstoreGenerateList() {
 	if err != nil {
 		fmt.Print(err.Error())
 		onlineMods = store
+		modPixbufs = map[string]*gdk.Pixbuf{}
+		progression <- 0
+		return
 	}
 	text, _ := ioutil.ReadAll(response.Body)
 	json.Unmarshal(text, &store)
 	onlineMods = store
 	response.Body.Close()
+	bufs := map[string]*gdk.Pixbuf{}
+	progression <- 0
+	modLength := len(onlineMods)
+	for i, a := range onlineMods {
+		if len(a.Versions[0].Icon) > 0 {
+			pbloader, _ := gdk.PixbufLoaderNew()
+			pbloader.SetSize(32, 32)
+			imageResponse, _ := http.Get(a.Versions[0].Icon)
+			imageBytes, _ := ioutil.ReadAll(imageResponse.Body)
+			imageResponse.Body.Close()
+			pbloader.Write(imageBytes)
+			pix, _ := pbloader.GetPixbuf()
+			bufs[a.Uuid4] = pix
+		} else {
+			bufs[a.Uuid4] = nil
+		}
+		progression <- float64(i) / float64(modLength)
+	}
+	modPixbufs = bufs
 }
 
 // ThunderstoreLocalToOnline : Get a local mod, and find the thunderstore equivalent
@@ -120,5 +145,10 @@ func ThunderstoreUpdateMod(mod *Mod) {}
 
 // ThunderstoreReady : Check if values are initialised
 func ThunderstoreReady() bool {
-	return onlineMods == nil
+	return (onlineMods != nil && modPixbufs != nil)
+}
+
+// ThunderstoreGetPixbufFromUUID4 : Get pixbuf to be used for thumbnails
+func ThunderstoreGetPixbufFromUUID4(uuid4 string) *gdk.Pixbuf {
+	return modPixbufs[uuid4]
 }
