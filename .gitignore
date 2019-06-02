@@ -17,5 +17,6 @@ lib/
 share
 share/
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+mods/*
+mods/*/
+!mods/*.json

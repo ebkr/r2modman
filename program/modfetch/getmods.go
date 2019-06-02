@@ -15,7 +15,7 @@ type modVersion struct {
 	Patch int
 }
 
-type modDependency struct {
+type ModDependency struct {
 	Name    string
 	Version modVersion
 }
@@ -26,7 +26,7 @@ type Mod struct {
 	Description  string
 	URL          string
 	Version      modVersion
-	Dependencies []modDependency
+	Dependencies []ModDependency
 	Path         string
 	Uuid4        string
 }
@@ -38,7 +38,7 @@ func createMod(name, description, url, version, path, uuid string) Mod {
 		Description:  description,
 		URL:          url,
 		Version:      getVersion(version),
-		Dependencies: []modDependency{},
+		Dependencies: []ModDependency{},
 		Path:         path,
 		Uuid4:        uuid,
 	}
@@ -46,12 +46,12 @@ func createMod(name, description, url, version, path, uuid string) Mod {
 
 // AddDependencies : Used to add dependencies from a list
 func (mod *Mod) AddDependencies(dependencies []string) {
-	list := []modDependency{}
+	list := []ModDependency{}
 	for _, a := range dependencies {
 		split := strings.Split(a, "-")
 		modName := strings.Join(split[0:len(split)-1], "-")
 		version := getVersion(split[len(split)-1])
-		list = append(list, modDependency{
+		list = append(list, ModDependency{
 			Name:    modName,
 			Version: version,
 		})
@@ -119,4 +119,15 @@ func UpdateMods(mods []Mod) {
 	b, _ := json.Marshal(newList)
 	file.Write(b)
 	file.Close()
+}
+
+// DependencyExists : Check if a dependency is installed
+func (mod *Mod) DependencyExists(dependency *ModDependency) bool {
+	mods := GetMods()
+	for _, a := range mods {
+		if strings.Compare(a.Name, dependency.Name) == 0 {
+			return true
+		}
+	}
+	return false
 }

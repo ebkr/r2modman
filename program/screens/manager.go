@@ -11,6 +11,7 @@ import (
 	"github.com/gotk3/gotk3/gdk"
 
 	"github.com/ebkr/r2modman/program/modfetch"
+	"github.com/ebkr/r2modman/program/modinstall"
 	"github.com/gotk3/gotk3/gtk"
 )
 
@@ -140,22 +141,14 @@ func (manager *ManagerScreen) create() {
 			pluginPath := gamePath + "/BepInEx/plugins/"
 			os.MkdirAll(pluginPath, 0777)
 
-			dir, readDirErr := ioutil.ReadDir(pluginPath)
-			if readDirErr != nil {
-				fmt.Println("ReadDirErr:", readDirErr.Error())
+			mods := modfetch.GetMods()
+			prepareErr := modinstall.PrepareInstall()
+			if prepareErr != nil {
+				fmt.Println(prepareErr.Error())
 				return
 			}
-			for _, dirFile := range dir {
-				if dirFile.Mode() == os.ModeSymlink {
-					fmt.Println("Found sym")
-					os.RemoveAll(pluginPath + dirFile.Name())
-				}
-			}
-			mods := modfetch.GetMods()
 			for _, mod := range mods {
-				cwd, _ := os.Getwd()
-				modPathFixed := cwd + mod.Path[1:]
-				os.Symlink(modPathFixed, pluginPath+mod.Name)
+				modinstall.InstallMod(&mod, gamePath+"/BepInEx/")
 			}
 			go func() {
 				time.Sleep(10)
