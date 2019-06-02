@@ -1,16 +1,13 @@
 ![Logo](https://i.imgur.com/rdImc3h.png)
 
-# r2modman
-
-## Risk of Rain 2 Mod Manager
+## r2modman : Risk of Rain 2 Mod Manager
 
 A simple, elegant, and easy-to-use mod manager for Risk of Rain 2.
 
-### Features:
+### Current Features:
 - Thunderstore Integration
 - Local Mods
 - Mod Updates
-- Symlink Loads
 
 Mods can be downloaded, and updated using Thunderstore integration
 
