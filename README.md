@@ -4,6 +4,8 @@
 
 A simple, elegant, and easy-to-use mod manager for Risk of Rain 2.
 
+---
+
 ### Current Features:
 - Thunderstore Integration
 - Local Mods
@@ -11,11 +13,15 @@ A simple, elegant, and easy-to-use mod manager for Risk of Rain 2.
 
 Mods can be downloaded, and updated using Thunderstore integration
 
+---
+
 ### Screenshots:
 
 ![MainScreen](https://i.imgur.com/YXxQVNP.png)
 
 ![OnlineScreen](https://i.imgur.com/PQFfCwA.png)
+
+---
 
 ### Credits
 
