@@ -9,6 +9,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ebkr/r2modman/program/screens/dialogs"
+
 	"github.com/gotk3/gotk3/gdk"
 
 	"github.com/gotk3/gotk3/gtk"
@@ -154,52 +156,112 @@ func ThunderstoreGetPixbufFromUUID4(uuid4 string) *gdk.Pixbuf {
 }
 
 // ThunderstoreDownloadMod : Download a mod directly from the store.
-func ThunderstoreDownloadMod(uuid string) *Mod {
-	for _, a := range onlineMods {
-		if a.Uuid4 == uuid {
-			stream, err := http.Get(a.Versions[0].Download_url)
-			if err != nil {
-				return nil
-			}
-			defer stream.Body.Close()
-			created, creationErr := os.Create("./mods/" + a.Versions[0].Full_name + ".zip")
-			if creationErr != nil {
-				return nil
-			}
-			_, copyErr := io.Copy(created, stream.Body)
-			if copyErr != nil {
-				return nil
-			}
-
-			res := Unzip(a.Full_name, "./mods/"+a.Versions[0].Full_name+".zip")
-			val, exists := res["manifest.json"]
-			if exists {
-				created.Close()
-				mod := MakeModFromManifest(val, "")
-				deleteErr := os.RemoveAll("./mods/" + a.Versions[0].Full_name + ".zip")
-				if deleteErr != nil {
-					fmt.Println(deleteErr.Error())
+func ThunderstoreDownloadMod(uuid string, window *gtk.Window) *Mod {
+	listener := make(chan *gtk.Dialog)
+	result := make(chan *Mod)
+	go func() {
+		dialog := <-listener
+		for _, a := range onlineMods {
+			if a.Uuid4 == uuid {
+				stream, err := http.Get(a.Versions[0].Download_url)
+				if err != nil {
+					break
 				}
-				//.Name = a.Name
-				//mod.Description = a.Versions[0].Description
-				//mod.
-				return &mod
+				defer stream.Body.Close()
+				created, creationErr := os.Create("./mods/" + a.Versions[0].Full_name + ".zip")
+				if creationErr != nil {
+					break
+				}
+				_, copyErr := io.Copy(created, stream.Body)
+				if copyErr != nil {
+					break
+				}
+
+				res := Unzip(a.Full_name, "./mods/"+a.Versions[0].Full_name+".zip")
+				val, exists := res["manifest.json"]
+				if exists {
+					created.Close()
+					mod := MakeModFromManifest(val, "")
+					mod.FullName = a.Full_name
+					deleteErr := os.RemoveAll("./mods/" + a.Versions[0].Full_name + ".zip")
+					if deleteErr != nil {
+						fmt.Println(deleteErr.Error())
+					}
+					dialog.Destroy()
+					result <- &mod
+					return
+				}
+				dialog.Destroy()
 			}
 		}
-	}
-	return nil
+		result <- nil
+		dialog.Destroy()
+	}()
+	dialogs.NewAwaitDialog(listener, "Downloading", "Downloading Mod")
+	res := <-result
+	window.Present()
+	return res
 }
 
 // ThunderstoreUpdateMod : Update a mod
-func ThunderstoreUpdateMod(mod *Mod) *Mod {
+func ThunderstoreUpdateMod(mod *Mod, window *gtk.Window) *Mod {
 	if len(mod.Uuid4) == 0 {
 		return mod
 	}
-	newMod := ThunderstoreDownloadMod(mod.Uuid4)
+	newMod := ThunderstoreDownloadMod(mod.Uuid4, window)
 	if newMod == nil {
 		return mod
 	}
 	os.RemoveAll(mod.Path)
 	newMod.Uuid4 = mod.Uuid4
 	return newMod
+}
+
+// ThunderstoreGetModByUUID4 : Return the mod associated by the UUID4
+func ThunderstoreGetModByUUID4(uuid4 string) *ThunderstoreJSON {
+	for _, a := range onlineMods {
+		if strings.Compare(a.Uuid4, uuid4) == 0 {
+			return &a
+		}
+	}
+	return nil
+}
+
+// ThunderstoreGetDependency : Used to download any missing dependencies
+func ThunderstoreGetDependency(modName string, window *gtk.Window) *Mod {
+	for _, a := range onlineMods {
+		if strings.Compare(a.Full_name, modName) == 0 {
+			dialog, _ := gtk.DialogNew()
+			box, _ := dialog.GetContentArea()
+			box.SetBorderWidth(10)
+
+			question, _ := gtk.LabelNew("Do you want to install missing dependency:")
+			tag, _ := gtk.LabelNew(a.Name)
+
+			box.PackStart(question, false, false, 5)
+			box.PackStart(tag, false, false, 10)
+			dialog.SetBorderWidth(10)
+			yes, _ := dialog.AddButton("Yes", gtk.RESPONSE_YES)
+			no, _ := dialog.AddButton("No", gtk.RESPONSE_NO)
+			yes.SetHAlign(gtk.ALIGN_START)
+			no.SetHAlign(gtk.ALIGN_START)
+
+			dialog.SetPosition(gtk.WIN_POS_CENTER)
+			dialog.SetTitle("Install Dependency")
+
+			dialog.ShowAll()
+
+			switch dialog.Run() {
+			case gtk.RESPONSE_YES:
+				dialog.Destroy()
+				mod := ThunderstoreDownloadMod(a.Uuid4, window)
+				mod.Uuid4 = a.Uuid4
+				return mod
+			case gtk.RESPONSE_NO:
+				dialog.Destroy()
+			}
+			break
+		}
+	}
+	return nil
 }

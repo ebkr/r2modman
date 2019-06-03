@@ -3,6 +3,7 @@ package modfetch
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -15,6 +16,12 @@ type modVersion struct {
 	Patch int
 }
 
+// String : Return a string object of the mod version.
+func (mv *modVersion) String() string {
+	return strconv.Itoa(mv.Major) + "." + strconv.Itoa(mv.Minor) + "." + strconv.Itoa(mv.Patch)
+}
+
+// ModDependency : Keep track of dependencies.
 type ModDependency struct {
 	Name    string
 	Version modVersion
@@ -22,6 +29,7 @@ type ModDependency struct {
 
 // Mod : Struct to contain mod information
 type Mod struct {
+	FullName     string
 	Name         string
 	Description  string
 	URL          string
@@ -32,7 +40,7 @@ type Mod struct {
 }
 
 // CreateMod : Used to create a mod object
-func createMod(name, description, url, version, path, uuid string) Mod {
+func createMod(name, description, url, version, path, uuid, fullName string) Mod {
 	return Mod{
 		Name:         name,
 		Description:  description,
@@ -41,6 +49,7 @@ func createMod(name, description, url, version, path, uuid string) Mod {
 		Dependencies: []ModDependency{},
 		Path:         path,
 		Uuid4:        uuid,
+		FullName:     fullName,
 	}
 }
 
@@ -121,13 +130,40 @@ func UpdateMods(mods []Mod) {
 	file.Close()
 }
 
+// RemoveMod : Remove a mod from the mods directory, and json file.
+func RemoveMod(mod *Mod) {
+	refreshedMods := GetMods()
+	index := -1
+	for i, a := range refreshedMods {
+		if strings.Compare(mod.Name, a.Name) == 0 {
+			err := os.RemoveAll(mod.Path)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			index = i
+		}
+	}
+	if index >= 0 {
+		refreshedMods = append(refreshedMods[:index], refreshedMods[index+1:]...)
+		UpdateMods(refreshedMods)
+	}
+}
+
 // DependencyExists : Check if a dependency is installed
 func (mod *Mod) DependencyExists(dependency *ModDependency) bool {
 	mods := GetMods()
 	for _, a := range mods {
-		if strings.Compare(a.Name, dependency.Name) == 0 {
-			return true
+		if strings.Compare(a.FullName, dependency.Name) == 0 {
+			depVer := dependency.Version
+			if a.Version.Major > depVer.Major {
+				return true
+			} else if a.Version.Major == depVer.Major && a.Version.Minor > depVer.Minor {
+				return true
+			} else if a.Version.Major == depVer.Major && a.Version.Minor == depVer.Minor && a.Version.Patch >= depVer.Patch {
+				return true
+			}
+			return false
 		}
 	}
-	return false
+	return strings.Compare(strings.ToLower(dependency.Name), "bbepis-bepinexpack") == 0
 }

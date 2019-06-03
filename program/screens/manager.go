@@ -26,6 +26,7 @@ func (manager *ManagerScreen) Show() {
 		manager.init("r2modman")
 		manager.create()
 		manager.window.SetKeepAbove(false)
+		manager.window.SetPosition(gtk.WIN_POS_CENTER)
 		manager.window.Connect("destroy", func() {
 			gtk.MainQuit()
 		})
@@ -191,7 +192,8 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 		name, _ := gtk.LabelNew(mod.Name)
 		rowBox.PackStart(name, false, false, 2)
 
-		delete, _ := gtk.ButtonNewFromIconName("window-close-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+		//delete, _ := gtk.ButtonNewFromIconName("window-close-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+		delete, _ := gtk.ButtonNewFromIconName("emblem-system-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
 		delete.SetProperty("relief", gtk.RELIEF_NONE)
 		rowBox.PackEnd(delete, false, false, 2)
 
@@ -218,7 +220,7 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 				if modfetch.ThunderstoreModHasUpdate(&m) {
 					updateAvailable, _ := gtk.ButtonNewFromIconName("software-update-urgent-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
 					updateAvailable.Connect("clicked", func() {
-						updatedMod := modfetch.ThunderstoreUpdateMod(&m)
+						updatedMod := modfetch.ThunderstoreUpdateMod(&m, manager.window)
 						refreshedMods := modfetch.GetMods()
 						modfetch.ThunderstoreLocalToOnline(&m)
 						for i, a := range refreshedMods {
@@ -236,25 +238,33 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 
 		}
 
+		// Dependency Icon
+		for _, a := range mod.Dependencies {
+			if !mod.DependencyExists(&a) {
+				missingDependency, _ := gtk.ButtonNewFromIconName("sync-error-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+				rowBox.PackEnd(missingDependency, false, false, 2)
+				fmt.Println("Missing mod:", a.Name)
+				func(mod modfetch.Mod, dep modfetch.ModDependency) {
+					missingDependency.Connect("clicked", func() {
+						// Missing Dependency Dialog
+						updatedMod := modfetch.ThunderstoreGetDependency(a.Name, manager.window)
+						if updatedMod != nil {
+							refreshedMods := modfetch.GetMods()
+							refreshedMods = append(refreshedMods, *updatedMod)
+							modfetch.UpdateMods(refreshedMods)
+							manager.updateMods(listBox)
+						}
+					})
+				}(mod, a)
+				break
+			}
+		}
+
 		// Events
 		func(m modfetch.Mod) {
 			delete.Connect("clicked", func() {
-				refreshedMods := modfetch.GetMods()
-				index := -1
-				for i, a := range refreshedMods {
-					if strings.Compare(m.Name, a.Name) == 0 {
-						err := os.RemoveAll(m.Path)
-						if err != nil {
-							fmt.Println(err.Error())
-						}
-						index = i
-					}
-				}
-				if index >= 0 {
-					refreshedMods = append(refreshedMods[:index], refreshedMods[index+1:]...)
-					modfetch.UpdateMods(refreshedMods)
-					manager.updateMods(listBox)
-				}
+				manager.showSettingsDialog(&m)
+				manager.updateMods(listBox)
 			})
 		}(mod)
 
@@ -290,7 +300,7 @@ func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox, ins
 
 		func(mod modfetch.ThunderstoreJSON) {
 			download.Connect("clicked", func() {
-				newMod := modfetch.ThunderstoreDownloadMod(mod.Uuid4)
+				newMod := modfetch.ThunderstoreDownloadMod(mod.Uuid4, manager.window)
 				if newMod == nil {
 					return
 				}
@@ -303,4 +313,50 @@ func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox, ins
 		}(mod)
 	}
 	listBox.ShowAll()
+}
+
+func (manager *ManagerScreen) showSettingsDialog(mod *modfetch.Mod) {
+
+	// Init
+	dialog, _ := gtk.DialogNew()
+	box, _ := dialog.GetContentArea()
+	box.SetBorderWidth(10)
+
+	// Display Mod Information
+	name, _ := gtk.LabelNew("Mod: " + mod.Name)
+	version, _ := gtk.LabelNew("Version: " + mod.Version.String())
+	box.PackStart(name, false, false, 5)
+	box.PackStart(version, false, false, 5)
+
+	if len(mod.Uuid4) > 0 {
+		thunder := modfetch.ThunderstoreGetModByUUID4(mod.Uuid4)
+		if thunder != nil {
+			owner, _ := gtk.LabelNew("Author: " + thunder.Owner)
+			url, _ := gtk.LinkButtonNewWithLabel(thunder.Package_url, "View On Thunderstore")
+			box.PackStart(owner, false, false, 5)
+			box.PackStart(url, false, false, 5)
+		}
+	}
+
+	dialog.AddButton("Delete", gtk.RESPONSE_CANCEL)
+	dialog.AddButton("Close", gtk.RESPONSE_CLOSE)
+
+	dialog.SetTitle(mod.Name + " Settings")
+
+	dialog.SetPosition(gtk.WIN_POS_CENTER)
+
+	dialog.ShowAll()
+
+	switch dialog.Run() {
+	case gtk.RESPONSE_CLOSE:
+		dialog.Destroy()
+		return
+	case gtk.RESPONSE_CANCEL:
+		modfetch.RemoveMod(mod)
+		dialog.Destroy()
+		return
+	default:
+		dialog.Destroy()
+		return
+	}
 }

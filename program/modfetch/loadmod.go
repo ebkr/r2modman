@@ -72,6 +72,7 @@ func MakeModFromManifest(manifestFile, uuid string) Mod {
 		manifest.Version_number,
 		folderDirectory,
 		uuid,
+		manifest.Name,
 	)
 	unzippedMod.AddDependencies(manifest.Dependencies)
 	return unzippedMod
