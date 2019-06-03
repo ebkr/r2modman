@@ -18,4 +18,5 @@ share
 share/
 
 mods/*
+mods/*.*
 mods/*/
