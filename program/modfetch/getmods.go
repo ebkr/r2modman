@@ -37,6 +37,7 @@ type Mod struct {
 	Dependencies []ModDependency
 	Path         string
 	Uuid4        string
+	Enabled      bool
 }
 
 // CreateMod : Used to create a mod object
@@ -50,6 +51,7 @@ func createMod(name, description, url, version, path, uuid, fullName string) Mod
 		Path:         path,
 		Uuid4:        uuid,
 		FullName:     fullName,
+		Enabled:      true,
 	}
 }
 
@@ -153,7 +155,7 @@ func RemoveMod(mod *Mod) {
 func (mod *Mod) DependencyExists(dependency *ModDependency) bool {
 	mods := GetMods()
 	for _, a := range mods {
-		if strings.Compare(a.FullName, dependency.Name) == 0 {
+		if a.Enabled && strings.Compare(a.FullName, dependency.Name) == 0 {
 			depVer := dependency.Version
 			if a.Version.Major > depVer.Major {
 				return true

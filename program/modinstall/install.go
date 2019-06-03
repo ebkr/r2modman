@@ -30,6 +30,10 @@ func PrepareInstall() error {
 // InstallMod : Used to install mods in BepInEx/ directory. Compatibility layer for BepInEx sub-directories.
 func InstallMod(mod *modfetch.Mod, bepPath string) error {
 
+	if !mod.Enabled {
+		return nil
+	}
+
 	files, err := ioutil.ReadDir(mod.Path)
 	if err != nil {
 		return err

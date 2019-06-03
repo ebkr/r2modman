@@ -187,15 +187,22 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 			// Create image
 			icon, _ := gtk.ImageNewFromPixbuf(pix)
 			rowBox.PackStart(icon, false, false, 5)
+			if !mod.Enabled {
+				icon.SetSensitive(false)
+			}
 		}
 
 		name, _ := gtk.LabelNew(mod.Name)
 		rowBox.PackStart(name, false, false, 2)
 
 		//delete, _ := gtk.ButtonNewFromIconName("window-close-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
-		delete, _ := gtk.ButtonNewFromIconName("emblem-system-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
-		delete.SetProperty("relief", gtk.RELIEF_NONE)
-		rowBox.PackEnd(delete, false, false, 2)
+		settings, _ := gtk.ButtonNewFromIconName("emblem-system-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+		settings.SetProperty("relief", gtk.RELIEF_NONE)
+		rowBox.PackEnd(settings, false, false, 2)
+
+		if !mod.Enabled {
+			name.SetSensitive(false)
+		}
 
 		// Thunderstore Update Integration
 		if strings.Compare(mod.Uuid4, "") == 0 {
@@ -205,7 +212,7 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 					refreshedMods := modfetch.GetMods()
 					modfetch.ThunderstoreLocalToOnline(&m)
 					for i, a := range refreshedMods {
-						if strings.Compare(a.Name, m.Name) == 0 && strings.Compare(a.Description, m.Description) == 0 {
+						if strings.Compare(a.FullName, m.FullName) == 0 && strings.Compare(a.Description, m.Description) == 0 {
 							refreshedMods[i] = m
 							break
 						}
@@ -243,14 +250,24 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 			if !mod.DependencyExists(&a) {
 				missingDependency, _ := gtk.ButtonNewFromIconName("sync-error-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
 				rowBox.PackEnd(missingDependency, false, false, 2)
-				fmt.Println("Missing mod:", a.Name)
 				func(mod modfetch.Mod, dep modfetch.ModDependency) {
 					missingDependency.Connect("clicked", func() {
 						// Missing Dependency Dialog
 						updatedMod := modfetch.ThunderstoreGetDependency(a.Name, manager.window)
 						if updatedMod != nil {
+							updatedMod.Enabled = true
 							refreshedMods := modfetch.GetMods()
-							refreshedMods = append(refreshedMods, *updatedMod)
+							found := false
+							for i, reMod := range refreshedMods {
+								if strings.Compare(reMod.Uuid4, updatedMod.Uuid4) == 0 {
+									refreshedMods[i] = *updatedMod
+									found = true
+									break
+								}
+							}
+							if !found {
+								refreshedMods = append(refreshedMods, *updatedMod)
+							}
 							modfetch.UpdateMods(refreshedMods)
 							manager.updateMods(listBox)
 						}
@@ -262,8 +279,16 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 
 		// Events
 		func(m modfetch.Mod) {
-			delete.Connect("clicked", func() {
+			settings.Connect("clicked", func() {
 				manager.showSettingsDialog(&m)
+				refreshedMods := modfetch.GetMods()
+				for i, a := range refreshedMods {
+					if strings.Compare(a.FullName, m.FullName) == 0 && strings.Compare(a.Description, m.Description) == 0 {
+						refreshedMods[i] = m
+						break
+					}
+				}
+				modfetch.UpdateMods(refreshedMods)
 				manager.updateMods(listBox)
 			})
 		}(mod)
@@ -338,7 +363,14 @@ func (manager *ManagerScreen) showSettingsDialog(mod *modfetch.Mod) {
 		}
 	}
 
-	dialog.AddButton("Delete", gtk.RESPONSE_CANCEL)
+	dialog.AddButton("Uninstall", gtk.RESPONSE_CANCEL)
+
+	if mod.Enabled {
+		dialog.AddButton("Disable", gtk.RESPONSE_APPLY)
+	} else {
+		dialog.AddButton("Enable", gtk.RESPONSE_APPLY)
+	}
+
 	dialog.AddButton("Close", gtk.RESPONSE_CLOSE)
 
 	dialog.SetTitle(mod.Name + " Settings")
@@ -353,6 +385,10 @@ func (manager *ManagerScreen) showSettingsDialog(mod *modfetch.Mod) {
 		return
 	case gtk.RESPONSE_CANCEL:
 		modfetch.RemoveMod(mod)
+		dialog.Destroy()
+		return
+	case gtk.RESPONSE_APPLY:
+		mod.Enabled = !mod.Enabled
 		dialog.Destroy()
 		return
 	default:

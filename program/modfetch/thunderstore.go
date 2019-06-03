@@ -256,6 +256,7 @@ func ThunderstoreGetDependency(modName string, window *gtk.Window) *Mod {
 				dialog.Destroy()
 				mod := ThunderstoreDownloadMod(a.Uuid4, window)
 				mod.Uuid4 = a.Uuid4
+				mod.Enabled = true
 				return mod
 			case gtk.RESPONSE_NO:
 				dialog.Destroy()
