@@ -24,6 +24,11 @@ Mods can be downloaded, and updated, using the Thunderstore integration directly
 
 ---
 
+### Notes:
+- BepInEx is not currently installable through the application.
+
+---
+
 ### Credits
 
 r2modman is written in [Go](https://golang.org).
