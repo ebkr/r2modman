@@ -10,8 +10,9 @@ A simple, elegant, and easy-to-use mod manager for Risk of Rain 2.
 - Thunderstore Integration
 - Local Mods
 - Mod Updates
+- Enable or disable mods
 
-Mods can be downloaded, and updated using Thunderstore integration
+Mods can be downloaded, and updated, using the Thunderstore integration directly within the application.
 
 ---
 
