@@ -18,7 +18,7 @@ Mods can be downloaded, and updated, using the Thunderstore integration directly
 
 ### Screenshots:
 
-![MainScreen](https://i.imgur.com/YXxQVNP.png)
+![MainScreen](https://i.imgur.com/gpk8zNk.png)
 
 ![OnlineScreen](https://i.imgur.com/PQFfCwA.png)
 
