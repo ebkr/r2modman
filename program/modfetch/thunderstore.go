@@ -69,6 +69,21 @@ func ThunderstoreGenerateList(progression chan float64) {
 	bufs := map[string]*gdk.Pixbuf{}
 	progression <- 0
 	modLength := len(onlineMods)
+	indexOfBepInEx := -1
+	indexOfr2 := -1
+	for i, a := range onlineMods {
+		if strings.Compare(a.Full_name, "bbepis-BepInExPack") == 0 {
+			indexOfBepInEx = i
+		} else if strings.Compare(a.Full_name, "ebkr-r2modman") == 0 {
+			indexOfBepInEx = i
+		}
+	}
+	if indexOfBepInEx >= 0 {
+		onlineMods = append(onlineMods[:indexOfBepInEx], onlineMods[indexOfBepInEx+1:]...)
+	}
+	if indexOfr2 >= 0 {
+		onlineMods = append(onlineMods[:indexOfr2], onlineMods[indexOfr2+1:]...)
+	}
 	for i, a := range onlineMods {
 		if len(a.Versions[0].Icon) > 0 {
 			pbloader, _ := gdk.PixbufLoaderNew()
