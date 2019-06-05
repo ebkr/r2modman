@@ -10,16 +10,22 @@ A simple, elegant, and easy-to-use mod manager for Risk of Rain 2.
 - Thunderstore Integration
 - Local Mods
 - Mod Updates
+- Enable or disable mods
 
-Mods can be downloaded, and updated using Thunderstore integration
+Mods can be downloaded, and updated, using the Thunderstore integration directly within the application.
 
 ---
 
 ### Screenshots:
 
-![MainScreen](https://i.imgur.com/YXxQVNP.png)
+![MainScreen](https://i.imgur.com/gpk8zNk.png)
 
 ![OnlineScreen](https://i.imgur.com/PQFfCwA.png)
+
+---
+
+### Notes:
+- BepInEx is not currently installable through the application.
 
 ---
 
@@ -28,3 +34,5 @@ Mods can be downloaded, and updated using Thunderstore integration
 r2modman is written in [Go](https://golang.org).
 
 The interface uses [GTK+3](https://gtk.org), using the [gotk3](https://github.com/gotk3/gotk3) binding.
+
+Moving mods to the correct directories was aided using the [copy](https://github.com/otiai10/copy) package provided by otiai10.
