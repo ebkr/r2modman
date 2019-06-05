@@ -10,6 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/ebkr/r2modman/program/globals"
 )
 
 type modManifest struct {
@@ -20,32 +22,34 @@ type modManifest struct {
 	Dependencies   []string
 }
 
-// Unzip : Unzips a file to /mods/ with a given name. Returns list of file paths.
+// Unzip : Unzips a file to /mods/ with a given name. Returns list of file paths
 func Unzip(name, zipSource string) map[string]string {
+	modDirectory := "./mods/" + globals.SelectedProfile + "/"
 	r, err := zip.OpenReader(zipSource)
 	defer r.Close()
 	if err != nil {
 		return nil
 	}
-	os.Mkdir("./mods/"+name, os.ModePerm)
+	os.Mkdir(modDirectory+name, os.ModePerm)
 	files := map[string]string{}
 	for _, file := range r.File {
 		if file.FileInfo().IsDir() {
-			folderPath := filepath.Join("./mods/"+name+"/", file.Name)
+			folderPath := filepath.Join(modDirectory+name+"/", file.Name)
 			os.MkdirAll(folderPath, 0777)
 		} else {
 			read, _ := file.Open()
 			defer read.Close()
 			lowerFileName := strings.ToLower(file.Name)
-			outputFile, _ := os.OpenFile("./mods/"+name+"/"+lowerFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+			outputFile, _ := os.OpenFile(modDirectory+name+"/"+lowerFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
 			defer outputFile.Close()
 			io.Copy(outputFile, read)
-			files[lowerFileName] = "./mods/" + name + "/" + lowerFileName
+			files[lowerFileName] = modDirectory + name + "/" + lowerFileName
 		}
 	}
 	return files
 }
 
+// MakeModFromManifest : Create a mod from the included manifest file
 func MakeModFromManifest(manifestFile, uuid string) Mod {
 	m, err := os.Open(manifestFile)
 	if err != nil {

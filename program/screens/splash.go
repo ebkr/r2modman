@@ -51,8 +51,8 @@ func (splash *SplashScreen) Show() {
 		} else if modfetch.ThunderstoreReady() {
 			splash.window.RemoveTickCallback(id)
 			splash.completed = true
-			splash.showMainScreen()
 			close(thunderstoreProgression)
+			splash.showProfileScreen()
 		} else {
 			select {
 			case frac := <-thunderstoreProgression:
@@ -77,8 +77,8 @@ func (splash *SplashScreen) create() {
 	splash.window.Add(box)
 }
 
-func (splash *SplashScreen) showMainScreen() {
-	main := ManagerScreen{}
-	main.Show()
+func (splash *SplashScreen) showProfileScreen() {
 	splash.window.Destroy()
+	profiles := ProfileScreen{}
+	profiles.Show()
 }

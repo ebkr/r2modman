@@ -7,6 +7,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/ebkr/r2modman/program/globals"
 )
 
 // ModVersion : Track the mod version
@@ -89,9 +91,10 @@ func getVersion(v string) modVersion {
 
 // GetMods : Get an array of mods
 func GetMods() []Mod {
-	file, fErr := os.Open("./mods/mods.json")
+	modDirectory := "./mods/" + globals.SelectedProfile + "/"
+	file, fErr := os.Open(modDirectory + "mods.json")
 	if os.IsNotExist(fErr) {
-		file, err := os.Create("./mods/mods.json")
+		file, err := os.Create(modDirectory + "mods.json")
 		if err != nil {
 			return []Mod{}
 		}
@@ -113,6 +116,7 @@ func GetMods() []Mod {
 
 // UpdateMods : Update the list of mods
 func UpdateMods(mods []Mod) {
+	modDirectory := "./mods/" + globals.SelectedProfile + "/"
 	newList := []Mod{}
 	for _, moda := range mods {
 		found := false
@@ -126,7 +130,7 @@ func UpdateMods(mods []Mod) {
 			newList = append(newList, moda)
 		}
 	}
-	file, _ := os.Create("./mods/mods.json")
+	file, _ := os.Create(modDirectory + "mods.json")
 	b, _ := json.Marshal(newList)
 	file.Write(b)
 	file.Close()

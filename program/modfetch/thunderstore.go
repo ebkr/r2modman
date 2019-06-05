@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ebkr/r2modman/program/globals"
 	"github.com/ebkr/r2modman/program/screens/dialogs"
 
 	"github.com/gotk3/gotk3/gdk"
@@ -157,6 +158,7 @@ func ThunderstoreGetPixbufFromUUID4(uuid4 string) *gdk.Pixbuf {
 
 // ThunderstoreDownloadMod : Download a mod directly from the store.
 func ThunderstoreDownloadMod(uuid string, window *gtk.Window) *Mod {
+	modDirectory := "./mods/" + globals.SelectedProfile + "/"
 	listener := make(chan *gtk.Dialog)
 	result := make(chan *Mod)
 	go func() {
@@ -168,7 +170,7 @@ func ThunderstoreDownloadMod(uuid string, window *gtk.Window) *Mod {
 					break
 				}
 				defer stream.Body.Close()
-				created, creationErr := os.Create("./mods/" + a.Versions[0].Full_name + ".zip")
+				created, creationErr := os.Create(modDirectory + a.Versions[0].Full_name + ".zip")
 				if creationErr != nil {
 					break
 				}
@@ -177,13 +179,13 @@ func ThunderstoreDownloadMod(uuid string, window *gtk.Window) *Mod {
 					break
 				}
 
-				res := Unzip(a.Full_name, "./mods/"+a.Versions[0].Full_name+".zip")
+				res := Unzip(a.Full_name, modDirectory+a.Versions[0].Full_name+".zip")
 				val, exists := res["manifest.json"]
 				if exists {
 					created.Close()
 					mod := MakeModFromManifest(val, "")
 					mod.FullName = a.Full_name
-					deleteErr := os.RemoveAll("./mods/" + a.Versions[0].Full_name + ".zip")
+					deleteErr := os.RemoveAll(modDirectory + a.Versions[0].Full_name + ".zip")
 					if deleteErr != nil {
 						fmt.Println(deleteErr.Error())
 					}
