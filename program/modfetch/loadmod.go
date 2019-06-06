@@ -1,16 +1,15 @@
 package modfetch
 
 import (
-	"archive/zip"
 	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
+	"github.com/artdarek/go-unzip"
 	"github.com/ebkr/r2modman/program/globals"
 )
 
@@ -25,26 +24,20 @@ type modManifest struct {
 // Unzip : Unzips a file to /mods/ with a given name. Returns list of file paths
 func Unzip(name, zipSource string) map[string]string {
 	modDirectory := "./mods/" + globals.SelectedProfile + "/"
-	r, err := zip.OpenReader(zipSource)
-	defer r.Close()
-	if err != nil {
-		return nil
-	}
-	os.Mkdir(modDirectory+name, os.ModePerm)
 	files := map[string]string{}
-	for _, file := range r.File {
-		if file.FileInfo().IsDir() {
-			folderPath := filepath.Join(modDirectory+name+"/", file.Name)
-			os.MkdirAll(folderPath, 0777)
-		} else {
-			read, _ := file.Open()
-			defer read.Close()
-			lowerFileName := strings.ToLower(file.Name)
-			outputFile, _ := os.OpenFile(modDirectory+name+"/"+lowerFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
-			defer outputFile.Close()
-			io.Copy(outputFile, read)
-			files[lowerFileName] = modDirectory + name + "/" + lowerFileName
-		}
+	uz := unzip.New(zipSource, modDirectory+name)
+	extractErr := uz.Extract()
+	if extractErr != nil {
+		fmt.Println("Error extracting mod:", extractErr.Error())
+		return files
+	}
+	lookthrough, lookErr := ioutil.ReadDir(modDirectory + name)
+	if lookErr != nil {
+		fmt.Println("Lookthrough Error:", lookErr.Error())
+		return files
+	}
+	for _, a := range lookthrough {
+		files[a.Name()] = modDirectory + name + "/" + a.Name()
 	}
 	return files
 }
