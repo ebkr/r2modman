@@ -36,3 +36,5 @@ r2modman is written in [Go](https://golang.org).
 The interface uses [GTK+3](https://gtk.org), using the [gotk3](https://github.com/gotk3/gotk3) binding.
 
 Moving mods to the correct directories was aided using the [copy](https://github.com/otiai10/copy) package provided by otiai10.
+
+Unzipping uses the [unzip](https://github.com/xyproto/unzip) package provided by xyproto.

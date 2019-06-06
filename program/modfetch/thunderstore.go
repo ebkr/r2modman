@@ -225,11 +225,11 @@ func ThunderstoreUpdateMod(mod *Mod, window *gtk.Window) *Mod {
 	if len(mod.Uuid4) == 0 {
 		return mod
 	}
+	os.RemoveAll(mod.Path)
 	newMod := ThunderstoreDownloadMod(mod.Uuid4, window)
 	if newMod == nil {
 		return mod
 	}
-	os.RemoveAll(mod.Path)
 	newMod.Uuid4 = mod.Uuid4
 	return newMod
 }

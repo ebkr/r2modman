@@ -61,9 +61,9 @@ func (manager *ManagerScreen) create() {
 	scrollWindowAvailable.Add(listAvailable)
 
 	buttonBox, _ := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 2)
-	local, _ := gtk.ButtonNewFromIconName("list-add-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+	local, _ := gtk.ButtonNewFromIconName("list-add", gtk.ICON_SIZE_SMALL_TOOLBAR)
 	play, _ := gtk.ButtonNewWithLabel("Play Risk of Rain 2")
-	getUpdates, _ := gtk.ButtonNewFromIconName("view-refresh-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+	getUpdates, _ := gtk.ButtonNewFromIconName("view-refresh", gtk.ICON_SIZE_SMALL_TOOLBAR)
 
 	buttonBox.PackStart(local, false, true, 2)
 	buttonBox.PackStart(getUpdates, false, true, 2)
@@ -195,7 +195,7 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 		name, _ := gtk.LabelNew(mod.Name)
 		rowBox.PackStart(name, false, false, 2)
 
-		//delete, _ := gtk.ButtonNewFromIconName("window-close-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+		//delete, _ := gtk.ButtonNewFromIconName("window-close", gtk.ICON_SIZE_SMALL_TOOLBAR)
 		settings, _ := gtk.ButtonNewFromIconName("emblem-system-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
 		settings.SetProperty("relief", gtk.RELIEF_NONE)
 		rowBox.PackEnd(settings, false, false, 2)
@@ -206,7 +206,7 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 
 		// Thunderstore Update Integration
 		if strings.Compare(mod.Uuid4, "") == 0 {
-			syncThunderstoreAlert, _ := gtk.ButtonNewFromIconName("dialog-warning-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+			syncThunderstoreAlert, _ := gtk.ButtonNewFromIconName("dialog-warning", gtk.ICON_SIZE_SMALL_TOOLBAR)
 			func(m modfetch.Mod, button *gtk.Button) {
 				button.Connect("clicked", func() {
 					refreshedMods := modfetch.GetMods()
@@ -225,11 +225,11 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 		} else {
 			func(m modfetch.Mod) {
 				if modfetch.ThunderstoreModHasUpdate(&m) {
-					updateAvailable, _ := gtk.ButtonNewFromIconName("software-update-urgent-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+					fmt.Println(mod.Name, "has update")
+					updateAvailable, _ := gtk.ButtonNewFromIconName("software-update-urgent", gtk.ICON_SIZE_SMALL_TOOLBAR)
 					updateAvailable.Connect("clicked", func() {
 						updatedMod := modfetch.ThunderstoreUpdateMod(&m, manager.window)
 						refreshedMods := modfetch.GetMods()
-						modfetch.ThunderstoreLocalToOnline(&m)
 						for i, a := range refreshedMods {
 							if strings.Compare(a.Uuid4, updatedMod.Uuid4) == 0 {
 								refreshedMods[i] = *updatedMod
@@ -248,7 +248,7 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 		// Dependency Icon
 		for _, a := range mod.Dependencies {
 			if !mod.DependencyExists(&a) {
-				missingDependency, _ := gtk.ButtonNewFromIconName("sync-error-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+				missingDependency, _ := gtk.ButtonNewFromIconName("sync-error", gtk.ICON_SIZE_SMALL_TOOLBAR)
 				rowBox.PackEnd(missingDependency, false, false, 2)
 				func(mod modfetch.Mod, dep modfetch.ModDependency) {
 					missingDependency.Connect("clicked", func() {
@@ -319,7 +319,7 @@ func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox, ins
 		label, _ := gtk.LabelNew(mod.Name)
 		box.PackStart(label, false, false, 2)
 
-		download, _ := gtk.ButtonNewFromIconName("go-down-symbolic", gtk.ICON_SIZE_SMALL_TOOLBAR)
+		download, _ := gtk.ButtonNewFromIconName("go-down", gtk.ICON_SIZE_SMALL_TOOLBAR)
 		download.SetProperty("relief", gtk.RELIEF_NONE)
 		box.PackEnd(download, false, false, 2)
 
