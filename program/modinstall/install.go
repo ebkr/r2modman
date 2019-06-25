@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -14,6 +15,11 @@ import (
 
 type installedMod struct {
 	Path string
+}
+
+type modfileReference struct {
+	file os.FileInfo
+	path string
 }
 
 // PrepareInstall : Used to remove previous mod installs.
@@ -34,14 +40,32 @@ func InstallMod(mod *modfetch.Mod, bepPath string) error {
 		return nil
 	}
 
+	/*
 	files, err := ioutil.ReadDir(mod.Path)
 	if err != nil {
 		return err
 	}
+	*/
 
 	installedMods := getInstalled()
 	installedDirectories := map[string]bool{}
 
+	locationsToInstall := findLocationToInstallFiles(mod.Path)
+	for location,files := range locationsToInstall {
+		installPath := filepath.Join(bepPath, location, mod.Name, "/")
+		fmt.Println("Installing mod:", mod.Name, "to:", installPath)
+		for _,file := range files {
+			copyErr := copy.Copy(file.path, installPath + "/" + file.file.Name())
+			if copyErr != nil {
+				fmt.Println("Path:", file.path)
+				fmt.Println(copyErr.Error())
+			}
+		}
+		fmt.Println("Install complete")
+		installedDirectories[installPath] = true
+	}
+
+	/*
 	for _, file := range files {
 		path := ""
 		var copyErr error
@@ -59,6 +83,7 @@ func InstallMod(mod *modfetch.Mod, bepPath string) error {
 		}
 		installedDirectories[path] = true
 	}
+	*/
 
 	for k := range installedDirectories {
 		installedMods = append(installedMods, installedMod{k})
@@ -78,6 +103,53 @@ func isScopableFolder(file os.FileInfo) bool {
 		}
 	}
 	return false
+}
+
+func findLocationToInstallFiles(basePath string) map[string][]*modfileReference {
+	store := map[string][]*modfileReference{}
+	dirs, err := ioutil.ReadDir(basePath)
+	if err != nil {
+		return store
+	}
+	setLocations := []string{"config", "core", "monomod", "patchers", "plugins"}
+	for _,a := range dirs {
+		if a.IsDir() {
+			found := false
+			for _,scope := range setLocations {
+				if strings.Compare(a.Name(), scope) == 0 {
+					found = true
+					files,_ := ioutil.ReadDir(filepath.Join(basePath, "/" + scope + "/"))
+					array := []*modfileReference{}
+					for _,genRef := range files {
+						array = append(array, &modfileReference{
+							file: genRef,
+							path: filepath.Join(basePath, scope, genRef.Name()),
+						})
+					}
+					store[scope] = array
+				}
+			}
+			if !found {
+				for key,val := range findLocationToInstallFiles(filepath.Join(basePath, "/" + a.Name() + "/")) {
+					exVal, exists := store[key]
+					if !exists {
+						exVal = []*modfileReference{}
+					}
+					store[key] = append(exVal, val...)
+				}
+			}
+		} else {
+			array,exists := store["plugins"]
+			if !exists {
+				array = []*modfileReference{}
+			}
+			store["plugins"] = append(array, &modfileReference{
+				file: a,
+				path: filepath.Join(basePath, a.Name()),
+			})
+		}
+	} 
+	return store
 }
 
 // Update the list of installed mods
