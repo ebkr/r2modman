@@ -157,7 +157,10 @@ func (profile *ProfileScreen) showNewProfileDialog(nameExists bool) {
 }
 
 func (profile *ProfileScreen) showMainScreen() {
-	profile.window.Destroy()
+	profile.window.GetChildren().Foreach(func(child interface{}) {
+		profile.window.Remove(child.(gtk.IWidget))
+	})
 	main := ManagerScreen{}
 	main.Show()
+	profile.window.Destroy()
 }

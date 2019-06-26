@@ -2,9 +2,9 @@ package modinstall
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -41,21 +41,21 @@ func InstallMod(mod *modfetch.Mod, bepPath string) error {
 	}
 
 	/*
-	files, err := ioutil.ReadDir(mod.Path)
-	if err != nil {
-		return err
-	}
+		files, err := ioutil.ReadDir(mod.Path)
+		if err != nil {
+			return err
+		}
 	*/
 
 	installedMods := getInstalled()
 	installedDirectories := map[string]bool{}
 
 	locationsToInstall := findLocationToInstallFiles(mod.Path)
-	for location,files := range locationsToInstall {
+	for location, files := range locationsToInstall {
 		installPath := filepath.Join(bepPath, location, mod.Name, "/")
 		fmt.Println("Installing mod:", mod.Name, "to:", installPath)
-		for _,file := range files {
-			copyErr := copy.Copy(file.path, installPath + "/" + file.file.Name())
+		for _, file := range files {
+			copyErr := copy.Copy(file.path, installPath+"/"+file.file.Name())
 			if copyErr != nil {
 				fmt.Println("Path:", file.path)
 				fmt.Println(copyErr.Error())
@@ -66,23 +66,23 @@ func InstallMod(mod *modfetch.Mod, bepPath string) error {
 	}
 
 	/*
-	for _, file := range files {
-		path := ""
-		var copyErr error
-		if file.IsDir() {
-			if isScopableFolder(file) {
-				path = filepath.Join(filepath.Join(bepPath, file.Name(), mod.Name))
-				copyErr = copy.Copy(filepath.Join(mod.Path, file.Name()), path)
+		for _, file := range files {
+			path := ""
+			var copyErr error
+			if file.IsDir() {
+				if isScopableFolder(file) {
+					path = filepath.Join(filepath.Join(bepPath, file.Name(), mod.Name))
+					copyErr = copy.Copy(filepath.Join(mod.Path, file.Name()), path)
+				}
+			} else {
+				path = filepath.Join(bepPath, "plugins", mod.Name)
+				copyErr = copy.Copy(filepath.Join(mod.Path, file.Name()), filepath.Join(path, file.Name()))
 			}
-		} else {
-			path = filepath.Join(bepPath, "plugins", mod.Name)
-			copyErr = copy.Copy(filepath.Join(mod.Path, file.Name()), filepath.Join(path, file.Name()))
+			if copyErr != nil {
+				return copyErr
+			}
+			installedDirectories[path] = true
 		}
-		if copyErr != nil {
-			return copyErr
-		}
-		installedDirectories[path] = true
-	}
 	*/
 
 	for k := range installedDirectories {
@@ -112,15 +112,15 @@ func findLocationToInstallFiles(basePath string) map[string][]*modfileReference 
 		return store
 	}
 	setLocations := []string{"config", "core", "monomod", "patchers", "plugins"}
-	for _,a := range dirs {
+	for _, a := range dirs {
 		if a.IsDir() {
 			found := false
-			for _,scope := range setLocations {
+			for _, scope := range setLocations {
 				if strings.Compare(a.Name(), scope) == 0 {
 					found = true
-					files,_ := ioutil.ReadDir(filepath.Join(basePath, "/" + scope + "/"))
+					files, _ := ioutil.ReadDir(filepath.Join(basePath, "/"+scope+"/"))
 					array := []*modfileReference{}
-					for _,genRef := range files {
+					for _, genRef := range files {
 						array = append(array, &modfileReference{
 							file: genRef,
 							path: filepath.Join(basePath, scope, genRef.Name()),
@@ -130,7 +130,7 @@ func findLocationToInstallFiles(basePath string) map[string][]*modfileReference 
 				}
 			}
 			if !found {
-				for key,val := range findLocationToInstallFiles(filepath.Join(basePath, "/" + a.Name() + "/")) {
+				for key, val := range findLocationToInstallFiles(filepath.Join(basePath, "/"+a.Name()+"/")) {
 					exVal, exists := store[key]
 					if !exists {
 						exVal = []*modfileReference{}
@@ -139,7 +139,7 @@ func findLocationToInstallFiles(basePath string) map[string][]*modfileReference 
 				}
 			}
 		} else {
-			array,exists := store["plugins"]
+			array, exists := store["plugins"]
 			if !exists {
 				array = []*modfileReference{}
 			}
@@ -148,7 +148,7 @@ func findLocationToInstallFiles(basePath string) map[string][]*modfileReference 
 				path: filepath.Join(basePath, a.Name()),
 			})
 		}
-	} 
+	}
 	return store
 }
 

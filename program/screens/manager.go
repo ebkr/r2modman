@@ -20,6 +20,10 @@ type ManagerScreen struct {
 	screen
 }
 
+var searchInstalled *gtk.Entry
+var searchAvailable *gtk.Entry
+var globalListInstalled *gtk.ListBox
+
 // Show : Show the manager screen
 func (manager *ManagerScreen) Show() {
 	if manager.window == nil {
@@ -45,21 +49,38 @@ func (manager *ManagerScreen) create() {
 	stackSwitcher, _ := gtk.StackSwitcherNew()
 	stackSwitcher.SetStack(stack)
 
+	// Search bars
+	searchInstalled,_ = gtk.EntryNew()
+	searchAvailable,_ = gtk.EntryNew()
+
+	searchInstalled.SetPlaceholderText("Search:")
+	searchAvailable.SetPlaceholderText("Search:")
+
+	// Main boxes
 	boxInstalled, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 2)
 	boxAvailable, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 2)
 	stack.AddTitled(boxInstalled, "installed", "Installed Mods")
 	stack.AddTitled(boxAvailable, "available", "Available Mods")
 
+	boxInstalled.PackStart(searchInstalled, false, false, 2)
+	boxAvailable.PackStart(searchAvailable, false, false, 2)
+
+	// Scroll windows
 	scrollWindowInstalled, _ := gtk.ScrolledWindowNew(nil, nil)
 	scrollWindowAvailable, _ := gtk.ScrolledWindowNew(nil, nil)
 	boxInstalled.PackStart(scrollWindowInstalled, true, true, 2)
 	boxAvailable.PackStart(scrollWindowAvailable, true, true, 2)
 
+	// Lists
 	listInstalled, _ := gtk.ListBoxNew()
 	listAvailable, _ := gtk.ListBoxNew()
 	scrollWindowInstalled.Add(listInstalled)
 	scrollWindowAvailable.Add(listAvailable)
 
+	// Reference global to allow update on download
+	globalListInstalled = listInstalled
+
+	// Buttons
 	buttonBox, _ := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 2)
 	local, _ := gtk.ButtonNewFromIconName("list-add", gtk.ICON_SIZE_SMALL_TOOLBAR)
 	play, _ := gtk.ButtonNewWithLabel("Play Risk of Rain 2")
@@ -69,8 +90,8 @@ func (manager *ManagerScreen) create() {
 	buttonBox.PackStart(getUpdates, false, true, 2)
 	buttonBox.PackStart(play, false, true, 2)
 
-	getUpdates.Connect("clicked", func() {
-		manager.updateMods(listInstalled)
+	_, _ = getUpdates.Connect("clicked", func() {
+		manager.updateMods(listInstalled, "")
 	})
 
 	mainBox.PackEnd(buttonBox, false, true, 2)
@@ -79,17 +100,16 @@ func (manager *ManagerScreen) create() {
 	mainBox.PackStart(stack, true, true, 0)
 	manager.window.Add(mainBox)
 
-	manager.updateMods(listInstalled)
-	//go manager.downloadThunderstoreList()
+	manager.updateMods(listInstalled, "")
 
 	// Events
-	local.Connect("clicked", func() {
+	_, _ = local.Connect("clicked", func() {
 		fileChooser, _ := gtk.FileChooserNativeDialogNew("Select Mods", manager.window, gtk.FILE_CHOOSER_ACTION_OPEN, "Install Mod", "Cancel")
 		fileFilter, _ := gtk.FileFilterNew()
 		fileFilter.AddPattern("*.zip")
 		fileChooser.SetFilter(fileFilter)
 		fileChooser.Show()
-		fileChooser.Connect("response", func() {
+		_, _ = fileChooser.Connect("response", func() {
 			filePath := strings.Split(fileChooser.GetFilename(), "\\")
 			fileNameSplit := strings.Split(filePath[len(filePath)-1], ".")
 			fileName := strings.Join(fileNameSplit[0:len(fileNameSplit)-1], ".")
@@ -100,7 +120,7 @@ func (manager *ManagerScreen) create() {
 				mods := modfetch.GetMods()
 				mods = append(mods, mod)
 				modfetch.UpdateMods(mods)
-				manager.updateMods(listInstalled)
+				manager.updateMods(listInstalled, "")
 			}
 		})
 	})
@@ -110,7 +130,7 @@ func (manager *ManagerScreen) create() {
 		play.SetLabel("Locate Risk of Rain 2")
 	}
 
-	play.Connect("clicked", func() {
+	_, _ = play.Connect("clicked", func() {
 		// Symlink
 		file, exists := os.Open("./program/path.txt")
 		if os.IsNotExist(exists) {
@@ -121,7 +141,7 @@ func (manager *ManagerScreen) create() {
 			file = tempf
 			selector, _ := gtk.FileChooserNativeDialogNew("Select Risk of Rain 2 Location", manager.window, gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER, "Select Folder", "Cancel")
 			selector.Show()
-			selector.Connect("response", func() {
+			_, _ = selector.Connect("response", func() {
 				folder := selector.GetFilename()
 				fmt.Println("Folder:", folder)
 				file.Write([]byte(folder))
@@ -159,11 +179,30 @@ func (manager *ManagerScreen) create() {
 		}
 	})
 
-	go manager.downloadThunderstoreList(listAvailable, listInstalled)
+	// Search bar events
+	_, _ = searchInstalled.Connect("notify::text", func() {
+		scrollWindowInstalled.Remove(listInstalled)
+		newInstalled, _ := gtk.ListBoxNew()
+		listInstalled = newInstalled
+		globalListInstalled = newInstalled
+		scrollWindowInstalled.Add(newInstalled)
+		filter, _ := searchInstalled.GetText()
+		manager.updateMods(newInstalled, strings.ToLower(filter))
+	})
+	_, _ = searchAvailable.Connect("notify::text", func() {
+		scrollWindowAvailable.Remove(listAvailable)
+		newAvailable, _ := gtk.ListBoxNew()
+		listAvailable = newAvailable
+		scrollWindowAvailable.Add(newAvailable)
+		filter, _ := searchAvailable.GetText()
+		manager.downloadThunderstoreList(newAvailable, strings.ToLower(filter))
+	})
+
+	go manager.downloadThunderstoreList(listAvailable, "")
 
 }
 
-func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
+func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox, filter string) {
 	listBox.GetChildren().Foreach(func(child interface{}) {
 		listBox.Remove(child.(gtk.IWidget))
 	})
@@ -218,7 +257,7 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 						}
 					}
 					modfetch.UpdateMods(refreshedMods)
-					manager.updateMods(listBox)
+					manager.updateMods(listBox, filter)
 				})
 			}(mod, syncThunderstoreAlert)
 			rowBox.PackEnd(syncThunderstoreAlert, false, false, 2)
@@ -237,7 +276,7 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 							}
 						}
 						modfetch.UpdateMods(refreshedMods)
-						manager.updateMods(listBox)
+						manager.updateMods(listBox, filter)
 					})
 					rowBox.PackEnd(updateAvailable, false, false, 2)
 				}
@@ -269,7 +308,7 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 								refreshedMods = append(refreshedMods, *updatedMod)
 							}
 							modfetch.UpdateMods(refreshedMods)
-							manager.updateMods(listBox)
+							manager.updateMods(listBox, filter)
 						}
 					})
 				}(mod, a)
@@ -289,18 +328,22 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox) {
 					}
 				}
 				modfetch.UpdateMods(refreshedMods)
-				manager.updateMods(listBox)
+				manager.updateMods(listBox, filter)
 			})
 		}(mod)
 
-		listBox.Add(row)
+		if strings.Contains(strings.ToLower(mod.Name), filter) {
+			listBox.Add(row)
+		} else {
+			row.Destroy()
+		}
 
 		// End of loop
 	}
 	manager.window.ShowAll()
 }
 
-func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox, installedBox *gtk.ListBox) {
+func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox, filter string) {
 	listBox.GetChildren().Foreach(func(child interface{}) {
 		listBox.Remove(child.(gtk.IWidget))
 	})
@@ -308,7 +351,6 @@ func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox, ins
 		row, _ := gtk.ListBoxRowNew()
 		box, _ := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 2)
 		row.Add(box)
-		listBox.Add(row)
 
 		image, _ := gtk.ImageNew()
 		box.PackStart(image, false, false, 5)
@@ -333,9 +375,16 @@ func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox, ins
 				refreshedMods := modfetch.GetMods()
 				refreshedMods = append(refreshedMods, *newMod)
 				modfetch.UpdateMods(refreshedMods)
-				manager.updateMods(installedBox)
+				text,_ := searchInstalled.GetText()
+				manager.updateMods(globalListInstalled, strings.ToLower(text))
 			})
 		}(mod)
+
+		if strings.Contains(strings.ToLower(mod.Name), filter) {
+			listBox.Add(row)
+		} else {
+			row.Destroy()
+		}
 	}
 	listBox.ShowAll()
 }

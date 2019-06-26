@@ -78,6 +78,9 @@ func (splash *SplashScreen) create() {
 }
 
 func (splash *SplashScreen) showProfileScreen() {
+	splash.window.GetChildren().Foreach(func(child interface{}) {
+		splash.window.Remove(child.(gtk.IWidget))
+	})
 	splash.window.Destroy()
 	profiles := ProfileScreen{}
 	profiles.Show()
