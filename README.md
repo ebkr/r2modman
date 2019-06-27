@@ -1,5 +1,3 @@
-# r2modman is in the progress of a framework overhaul due to stability purposes. It will be transitioning from GTK3 to Qt. All current updates are paused whilst this is in progress.
-
 ![Logo](https://i.imgur.com/rdImc3h.png)
 
 ## r2modman : Risk of Rain 2 Mod Manager
