@@ -91,7 +91,7 @@ func getVersion(v string) modVersion {
 
 // GetMods : Get an array of mods
 func GetMods() []Mod {
-	modDirectory := "./mods/" + globals.SelectedProfile + "/"
+	modDirectory := globals.RootDirectory + "/mods/" + globals.SelectedProfile + "/"
 	file, fErr := os.Open(modDirectory + "mods.json")
 	if os.IsNotExist(fErr) {
 		file, err := os.Create(modDirectory + "mods.json")
@@ -116,7 +116,7 @@ func GetMods() []Mod {
 
 // UpdateMods : Update the list of mods
 func UpdateMods(mods []Mod) {
-	modDirectory := "./mods/" + globals.SelectedProfile + "/"
+	modDirectory := globals.RootDirectory + "/mods/" + globals.SelectedProfile + "/"
 	newList := []Mod{}
 	for _, moda := range mods {
 		found := false

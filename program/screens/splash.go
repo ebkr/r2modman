@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"github.com/ebkr/r2modman/program/globals"
 	"time"
 
 	"github.com/ebkr/r2modman/program/modfetch"
@@ -69,7 +70,7 @@ func (splash *SplashScreen) Show() {
 func (splash *SplashScreen) create() {
 	box, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 2)
 
-	image, _ := gtk.ImageNewFromFile("./program/assets/r2modman.png")
+	image, _ := gtk.ImageNewFromFile(globals.RootDirectory + "/program/assets/r2modman.png")
 	progressBar, _ = gtk.ProgressBarNew()
 
 	box.PackStart(image, false, false, 0)

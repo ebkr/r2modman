@@ -2,6 +2,7 @@ package screens
 
 import (
 	"fmt"
+	"github.com/ebkr/r2modman/program/globals"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -42,16 +43,45 @@ func (manager *ManagerScreen) create() {
 
 	manager.window.SetDefaultSize(400, 300)
 
-	mainBox, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 2)
+	mainBox, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5)
 	mainBox.SetBorderWidth(10)
+
+	register := globals.R2Registry{}
+	registerProtocol, _ := gtk.InfoBarNew()
+	registerLabel, _ := gtk.LabelNew("Associate ROR2MM:// links with r2modman?")
+	contentArea, _ := registerProtocol.GetContentArea()
+	contentArea.PackStart(registerLabel, false, false, 2)
+	registerOk, _ := gtk.ButtonNewWithLabel("Ok")
+	registerProtocol.AddActionWidget(registerOk, gtk.RESPONSE_ACCEPT)
+	registerProtocol.SetShowCloseButton(true)
+	if !register.IsAssociatedWithProtocol().Valid {
+		mainBox.PackStart(registerProtocol, false, false, 2)
+	}
+
+	registerActivated := false
+	_, _ = registerOk.Connect("clicked", func() {
+		if registerActivated {
+			mainBox.Remove(registerProtocol)
+		}
+		res := register.SetAssociatedProtocol()
+		if !res.Valid {
+			fmt.Println("Register Protocol Failed with Code:", res.Error.Code)
+			fmt.Println("Reason:", res.Error.Reason)
+			registerLabel.SetLabel("You need admin privileges to perform this action")
+			registerActivated = true
+			return
+		} else {
+			mainBox.Remove(registerProtocol)
+		}
+	})
 
 	stack, _ := gtk.StackNew()
 	stackSwitcher, _ := gtk.StackSwitcherNew()
 	stackSwitcher.SetStack(stack)
 
 	// Search bars
-	searchInstalled,_ = gtk.EntryNew()
-	searchAvailable,_ = gtk.EntryNew()
+	searchInstalled, _ = gtk.EntryNew()
+	searchAvailable, _ = gtk.EntryNew()
 
 	searchInstalled.SetPlaceholderText("Search:")
 	searchAvailable.SetPlaceholderText("Search:")
@@ -125,16 +155,16 @@ func (manager *ManagerScreen) create() {
 		})
 	})
 
-	_, exists := os.Open("./program/path.txt")
+	_, exists := os.Open(globals.RootDirectory + "/program/path.txt")
 	if os.IsNotExist(exists) {
 		play.SetLabel("Locate Risk of Rain 2")
 	}
 
 	_, _ = play.Connect("clicked", func() {
 		// Symlink
-		file, exists := os.Open("./program/path.txt")
+		file, exists := os.Open(globals.RootDirectory + "/program/path.txt")
 		if os.IsNotExist(exists) {
-			tempf, creationErr := os.Create("./program/path.txt")
+			tempf, creationErr := os.Create(globals.RootDirectory + "/program/path.txt")
 			if creationErr != nil {
 				return
 			}
@@ -157,7 +187,7 @@ func (manager *ManagerScreen) create() {
 
 			if searchErr != nil {
 				fmt.Println("Path Error:", searchErr.Error())
-				os.Remove("./program/path.txt")
+				os.Remove(globals.RootDirectory + "/program/path.txt")
 			}
 			pluginPath := gamePath + "/BepInEx/plugins/"
 			os.MkdirAll(pluginPath, 0777)
@@ -375,7 +405,7 @@ func (manager *ManagerScreen) downloadThunderstoreList(listBox *gtk.ListBox, fil
 				refreshedMods := modfetch.GetMods()
 				refreshedMods = append(refreshedMods, *newMod)
 				modfetch.UpdateMods(refreshedMods)
-				text,_ := searchInstalled.GetText()
+				text, _ := searchInstalled.GetText()
 				manager.updateMods(globalListInstalled, strings.ToLower(text))
 			})
 		}(mod)

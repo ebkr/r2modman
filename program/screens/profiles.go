@@ -60,7 +60,7 @@ func (profile *ProfileScreen) create() {
 		selected.GetChildren().Foreach(func(child interface{}) {
 			label := &gtk.Label{gtk.Widget{glib.InitiallyUnowned{child.(*gtk.Widget).Object}}}
 			text, _ := label.GetText()
-			os.RemoveAll("./mods/" + text + "/")
+			os.RemoveAll(globals.RootDirectory + "/mods/" + text + "/")
 		})
 		profile.updateListBox(listBox)
 	})
@@ -95,7 +95,7 @@ func (profile *ProfileScreen) updateListBox(listBox *gtk.ListBox) {
 	listBox.GetChildren().Foreach(func(child interface{}) {
 		listBox.Remove(child.(gtk.IWidget))
 	})
-	files, err := ioutil.ReadDir("./mods/")
+	files, err := ioutil.ReadDir(globals.RootDirectory + "/mods/")
 	if err != nil {
 		return
 	}
@@ -142,9 +142,9 @@ func (profile *ProfileScreen) showNewProfileDialog(nameExists bool) {
 			dialog.Destroy()
 			return
 		}
-		_, exists := os.Stat("./mods/" + text)
+		_, exists := os.Stat(globals.RootDirectory + "/mods/" + text)
 		if os.IsNotExist(exists) {
-			os.MkdirAll("./mods/"+text, 0777)
+			os.MkdirAll(globals.RootDirectory+"/mods/"+text, 0777)
 			dialog.Destroy()
 		} else {
 			dialog.Destroy()

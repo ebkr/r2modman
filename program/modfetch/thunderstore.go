@@ -173,7 +173,7 @@ func ThunderstoreGetPixbufFromUUID4(uuid4 string) *gdk.Pixbuf {
 
 // ThunderstoreDownloadMod : Download a mod directly from the store.
 func ThunderstoreDownloadMod(uuid string, window *gtk.Window) *Mod {
-	modDirectory := "./mods/" + globals.SelectedProfile + "/"
+	modDirectory := globals.RootDirectory + "/mods/" + globals.SelectedProfile + "/"
 	listener := make(chan *gtk.Dialog)
 	result := make(chan *Mod)
 	go func() {

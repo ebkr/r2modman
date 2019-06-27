@@ -3,6 +3,7 @@ package modinstall
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ebkr/r2modman/program/globals"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -158,7 +159,7 @@ func updateInstalled(installed []installedMod) error {
 	if parseErr != nil {
 		return parseErr
 	}
-	file, createErr := os.Create("./mods/installed.json")
+	file, createErr := os.Create(globals.RootDirectory + "/mods/installed.json")
 	if createErr != nil {
 		return createErr
 	}
@@ -170,7 +171,7 @@ func updateInstalled(installed []installedMod) error {
 // Get the list of installed mod paths
 func getInstalled() []installedMod {
 	data := []installedMod{}
-	file, fileErr := os.Open("./mods/installed.json")
+	file, fileErr := os.Open(globals.RootDirectory + "/mods/installed.json")
 	if fileErr != nil {
 		return data
 	}

@@ -23,7 +23,7 @@ type modManifest struct {
 
 // Unzip : Unzips a file to /mods/ with a given name. Returns list of file paths
 func Unzip(name, zipSource string) map[string]string {
-	modDirectory := "./mods/" + globals.SelectedProfile + "/"
+	modDirectory := globals.RootDirectory + "/mods/" + globals.SelectedProfile + "/"
 	files := map[string]string{}
 	uz := unzip.New(zipSource, modDirectory+name)
 	extractErr := uz.Extract()
