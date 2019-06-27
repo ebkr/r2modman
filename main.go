@@ -12,8 +12,10 @@ import (
 )
 
 func main() {
+	isCmdLine := false
 	if len(os.Args) > 1 {
 		if strings.HasPrefix(os.Args[1], "ror2mm://") {
+			isCmdLine = true
 			globals.ROR2MMProtocol = strings.TrimPrefix(os.Args[1], "ror2mm://")
 		}
 	} else {
@@ -23,7 +25,12 @@ func main() {
 	globals.ExecutableLocation = exec
 	globals.RootDirectory = filepath.Dir(exec)
 	gtk.Init(&os.Args)
-	splash := screens.SplashScreen{}
-	splash.Show()
+	if !isCmdLine {
+		splash := screens.SplashScreen{}
+		splash.Show()
+	} else {
+		profiles := screens.ProfileScreen{}
+		profiles.Show(true)
+	}
 	gtk.Main()
 }

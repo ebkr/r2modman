@@ -84,5 +84,5 @@ func (splash *SplashScreen) showProfileScreen() {
 	})
 	splash.window.Destroy()
 	profiles := ProfileScreen{}
-	profiles.Show()
+	profiles.Show(false)
 }

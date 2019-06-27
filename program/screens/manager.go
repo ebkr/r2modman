@@ -2,6 +2,7 @@ package screens
 
 import (
 	"fmt"
+	"github.com/ebkr/r2modman/program/filewatcher"
 	"github.com/ebkr/r2modman/program/globals"
 	"io/ioutil"
 	"os"
@@ -210,23 +211,32 @@ func (manager *ManagerScreen) create() {
 	})
 
 	// Search bar events
-	_, _ = searchInstalled.Connect("notify::text", func() {
+	searchInstalledUpdate := func() {
 		scrollWindowInstalled.Remove(listInstalled)
+		listInstalled.Destroy()
 		newInstalled, _ := gtk.ListBoxNew()
 		listInstalled = newInstalled
 		globalListInstalled = newInstalled
 		scrollWindowInstalled.Add(newInstalled)
 		filter, _ := searchInstalled.GetText()
 		manager.updateMods(newInstalled, strings.ToLower(filter))
-	})
+	}
+	_, _ = searchInstalled.Connect("notify::text", searchInstalledUpdate)
 	_, _ = searchAvailable.Connect("notify::text", func() {
 		scrollWindowAvailable.Remove(listAvailable)
+		listAvailable.Destroy()
 		newAvailable, _ := gtk.ListBoxNew()
 		listAvailable = newAvailable
 		scrollWindowAvailable.Add(newAvailable)
 		filter, _ := searchAvailable.GetText()
 		manager.downloadThunderstoreList(newAvailable, strings.ToLower(filter))
 	})
+
+	watcher := filewatcher.FileWatcher{
+		Path:     globals.RootDirectory + "/mods/" + globals.SelectedProfile + "/mods.json",
+		OnChange: searchInstalledUpdate,
+	}
+	go watcher.Watch()
 
 	go manager.downloadThunderstoreList(listAvailable, "")
 
@@ -370,6 +380,7 @@ func (manager *ManagerScreen) updateMods(listBox *gtk.ListBox, filter string) {
 
 		// End of loop
 	}
+
 	manager.window.ShowAll()
 }
 

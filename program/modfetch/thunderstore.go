@@ -67,7 +67,6 @@ func ThunderstoreGenerateList(progression chan float64) {
 	onlineMods = store
 	response.Body.Close()
 	bufs := map[string]*gdk.Pixbuf{}
-	progression <- 0
 	modLength := len(onlineMods)
 	indexOfBepInEx := -1
 	indexOfr2 := -1
@@ -83,6 +82,10 @@ func ThunderstoreGenerateList(progression chan float64) {
 	}
 	if indexOfr2 >= 0 {
 		onlineMods = append(onlineMods[:indexOfr2], onlineMods[indexOfr2+1:]...)
+	}
+	progression <- 0
+	if len(globals.ROR2MMProtocol) > 0 {
+		return
 	}
 	for i, a := range onlineMods {
 		if len(a.Versions[0].Icon) > 0 {
@@ -179,13 +182,24 @@ func ThunderstoreDownloadMod(uuid string, window *gtk.Window) *Mod {
 	go func() {
 		dialog := <-listener
 		for _, a := range onlineMods {
-			if a.Uuid4 == uuid {
-				stream, err := http.Get(a.Versions[0].Download_url)
+			var usingVersion *ThunderstoreVersion
+			if strings.Compare(a.Uuid4, uuid) == 0 {
+				usingVersion = &a.Versions[0]
+			} else {
+				for _, b := range a.Versions {
+					if strings.Compare(b.Uuid4, uuid) == 0 {
+						usingVersion = &b
+						break
+					}
+				}
+			}
+			if usingVersion != nil {
+				stream, err := http.Get(usingVersion.Download_url)
 				if err != nil {
 					break
 				}
 				defer stream.Body.Close()
-				created, creationErr := os.Create(modDirectory + a.Versions[0].Full_name + ".zip")
+				created, creationErr := os.Create(modDirectory + usingVersion.Full_name + ".zip")
 				if creationErr != nil {
 					break
 				}
@@ -194,13 +208,14 @@ func ThunderstoreDownloadMod(uuid string, window *gtk.Window) *Mod {
 					break
 				}
 
-				res := Unzip(a.Full_name, modDirectory+a.Versions[0].Full_name+".zip")
+				res := Unzip(a.Full_name, modDirectory+usingVersion.Full_name+".zip")
 				val, exists := res["manifest.json"]
 				if exists {
 					created.Close()
 					mod := MakeModFromManifest(val, "")
 					mod.FullName = a.Full_name
-					deleteErr := os.RemoveAll(modDirectory + a.Versions[0].Full_name + ".zip")
+					mod.Uuid4 = a.Uuid4
+					deleteErr := os.RemoveAll(modDirectory + usingVersion.Full_name + ".zip")
 					if deleteErr != nil {
 						fmt.Println(deleteErr.Error())
 					}
@@ -279,6 +294,33 @@ func ThunderstoreGetDependency(modName string, window *gtk.Window) *Mod {
 				dialog.Destroy()
 			}
 			break
+		}
+	}
+	return nil
+}
+
+// ThunderstoreFindFromProtocol : Get mod using protocol url.
+func ThunderstoreInstallFromProtocol(proto string, window *gtk.Window) *Mod {
+	fmt.Println("Searching using Protocol:", proto)
+	// Reference Protocol: "v1/install/thunderstore.io/ebkr/r2modman/1.0.11/"
+	protoSplit := strings.Split(proto, "/")
+	// Reduce to Author/Mod/Version
+	protoSplit = protoSplit[3:]
+	for i, a := range protoSplit {
+		fmt.Println(i, a)
+	}
+	for _, a := range onlineMods {
+		fmt.Println(a.Owner, ":", protoSplit[0], "//", a.Name, ":", protoSplit[1])
+		if strings.Compare(a.Owner, protoSplit[0]) == 0 && strings.Compare(a.Name, protoSplit[1]) == 0 {
+			fmt.Println("Found")
+			// Mod is correct
+			for _, version := range a.Versions {
+				fmt.Println(version.Version_number, protoSplit[2])
+				if strings.Compare(version.Version_number, protoSplit[2]) == 0 {
+					// Correct version
+					return ThunderstoreDownloadMod(version.Uuid4, window)
+				}
+			}
 		}
 	}
 	return nil

@@ -2,6 +2,7 @@ package screens
 
 import (
 	"fmt"
+	"github.com/ebkr/r2modman/program/modfetch"
 	"io/ioutil"
 	"os"
 
@@ -16,10 +17,10 @@ type ProfileScreen struct {
 }
 
 // Show : Show the profiles screen
-func (profile *ProfileScreen) Show() {
+func (profile *ProfileScreen) Show(isCmdLine bool) {
 	if profile.window == nil {
 		profile.init("r2modman : Profiles")
-		profile.create()
+		profile.create(isCmdLine)
 		profile.window.SetPosition(gtk.WIN_POS_CENTER)
 		profile.window.Connect("destroy", func() {
 			if len(globals.SelectedProfile) == 0 {
@@ -30,7 +31,7 @@ func (profile *ProfileScreen) Show() {
 	profile.window.ShowAll()
 }
 
-func (profile *ProfileScreen) create() {
+func (profile *ProfileScreen) create(isCmdLine bool) {
 	box, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 2)
 	box.SetBorderWidth(10)
 	profile.window.Add(box)
@@ -52,7 +53,7 @@ func (profile *ProfileScreen) create() {
 
 	profile.updateListBox(listBox)
 
-	deleteProfile.Connect("clicked", func() {
+	_, _ = deleteProfile.Connect("clicked", func() {
 		selected := listBox.GetSelectedRow()
 		if selected == nil {
 			return
@@ -60,12 +61,12 @@ func (profile *ProfileScreen) create() {
 		selected.GetChildren().Foreach(func(child interface{}) {
 			label := &gtk.Label{gtk.Widget{glib.InitiallyUnowned{child.(*gtk.Widget).Object}}}
 			text, _ := label.GetText()
-			os.RemoveAll(globals.RootDirectory + "/mods/" + text + "/")
+			_ = os.RemoveAll(globals.RootDirectory + "/mods/" + text + "/")
 		})
 		profile.updateListBox(listBox)
 	})
 
-	selectButton.Connect("clicked", func() {
+	_, _ = selectButton.Connect("clicked", func() {
 		selected := listBox.GetSelectedRow()
 		if selected == nil {
 			return
@@ -79,10 +80,35 @@ func (profile *ProfileScreen) create() {
 		if len(globals.SelectedProfile) == 0 {
 			return
 		}
-		profile.showMainScreen()
+		if !isCmdLine {
+			profile.showMainScreen()
+		} else {
+			thunderstoreProgression := make(chan float64)
+			go modfetch.ThunderstoreGenerateList(thunderstoreProgression)
+			<-thunderstoreProgression
+			mod := modfetch.ThunderstoreInstallFromProtocol(globals.ROR2MMProtocol, profile.window)
+			if mod != nil {
+
+				mods := modfetch.GetMods()
+				found := false
+				for i, a := range mods {
+					if a.FullName == mod.FullName {
+						mods[i] = *mod
+						found = true
+						break
+					}
+				}
+				if !found {
+					mods = append(mods, *mod)
+				}
+				modfetch.UpdateMods(mods)
+			}
+			fmt.Println("Mod:", mod)
+			gtk.MainQuit()
+		}
 	})
 
-	newProfile.Connect("clicked", func() {
+	_, _ = newProfile.Connect("clicked", func() {
 		profile.showNewProfileDialog(false)
 		profile.updateListBox(listBox)
 	})

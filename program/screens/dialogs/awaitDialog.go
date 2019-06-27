@@ -25,14 +25,13 @@ func (await *AwaitDialog) Setup(channel chan *gtk.Dialog) {
 	dialog.SetTitle(await.Title)
 	box, _ := dialog.GetContentArea()
 	box.SetBorderWidth(10)
+	dialog.SetPosition(gtk.WIN_POS_CENTER)
 
 	action, _ := gtk.LabelNew(await.Description)
 	pulse, _ := gtk.ProgressBarNew()
 
 	box.PackStart(action, false, false, 5)
 	box.PackStart(pulse, false, false, 5)
-
-	dialog.SetPosition(gtk.WIN_POS_CENTER)
 
 	dialog.ShowAll()
 
