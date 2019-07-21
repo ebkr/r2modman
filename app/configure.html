@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>r2modman</title>
+        <link href="design2.css" type="text/css" rel="stylesheet" />
+    </head>
+    <body class="navRoot">
+        <div class="nav">
+            <button id="toggle">Disable Mod</button>
+            <button id="view">View on Thunderstore</button>
+            <button id="remove">Remove Mod</button>
+        </div>
+        <div class="Container">
+            <h3><span>{mod.Name} - v{mod.Version.Major}.{mod.Version.Minor}.{mod.Version.Patch}</span></h3>
+            <p><span>Author: {mod.Author}</span></p>
+            <hr/>
+            <p><span>{mod.Description}</span></p>
+        </div>
+        <script src="./code/configure/configure.js"></script>
+    </body>
+</html>

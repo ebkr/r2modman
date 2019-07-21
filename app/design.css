@@ -1,0 +1,225 @@
+* {
+    outline-color: #222;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.9em;
+}
+
+.hideOverflow {
+    overflow: hidden;
+} 
+
+img {
+    padding: 0;
+    margin: 0;
+}
+
+#progressBar {
+    width: 100%;
+    height: 5px;
+    padding: 0;
+    margin: 0;
+}
+
+#progressBarInner {
+    height: 5px;
+    padding: 0;
+    margin: 0;
+    background-color: cadetblue;
+    position: relative;
+}
+
+@keyframes SideToSide {
+    0% {
+        left: 0;
+    }
+    25% {
+        left: 0;
+    }
+    50% {
+        left: calc(80%);
+    }
+    75% {
+        left: calc(80%);
+    }
+    100% {
+        left: 0;
+    }
+}
+
+.animateSideToSide {
+     animation: SideToSide 1s infinite 0s linear;
+     width: 20%;
+}
+
+#SplashDescription {
+    padding: 1em;
+    text-align: center;
+}
+
+.Container {
+    padding: 1em;
+}
+
+select {
+    width: 100%;
+    overflow: auto;
+    border-color: #eee;
+}
+select > option {
+    padding: 1em;
+}
+
+tabs {
+    display: flex;
+}
+tab {
+    display: inline-block;
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+    padding: 1em;
+    background-color: white;
+}
+tab:hover {
+    background-color: #f5f5f5;
+}
+tab[selected] {
+    background-color: rgb(9, 132, 189);
+    color: white;
+}
+
+button {
+    padding: 1em;
+    margin: 0;
+    border: 2px solid #eee; 
+    background-color: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+button:hover, button:active, button:focus {
+    background-color: #eee;
+    color: #222;
+    outline: 0;
+}
+button[selected] {
+    border-color: rgb(9, 132, 189);
+    background-color: rgb(9, 132, 189);
+    color: white;
+}
+.ButtonFrame > button:first-child {
+    border-radius: 5px 0px 0px 5px;
+}
+.ButtonFrame > button:last-child {
+    border-radius: 0px 5px 5px 0px;
+}
+.ButtonFrame > button:not(:last-child) {
+    border-right: 0;
+}
+
+[hidden] {
+    display: none;
+}
+
+.listImage {
+    width: 32px;
+    height: 32px;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: max-content auto minmax(min-content, 100px) minmax(min-content, 32px);
+    column-gap: 1em;
+    padding: 0.5em;
+    border-bottom: 1px solid #f5f5f5;
+}
+.row[valid] {
+    display: grid;
+    grid-template-columns: max-content auto minmax(min-content, 100px);
+    column-gap: 1em;
+    padding: 0.5em;
+    border-bottom: 1px solid #f5f5f5;
+}
+.row:hover {
+    background-color: rgb(9, 147, 211);
+    color: white;
+}
+
+.row:hover > button {
+    background-color: rgb(7, 160, 231);
+    border-color: transparent;
+    color: inherit;
+}
+.row:hover > button:hover {
+    border-color: white;
+}
+.row[hasUpdate] {
+    background-color: transparent;
+    background: linear-gradient(to right, rgb(181, 184, 0), white);
+}
+.row[hasUpdate] > button {
+    background-color: rgb(181, 184, 0);
+    border-color: black;
+}
+.row[missingDependency] {
+    background-color: transparent;
+    background: linear-gradient(to right, rgb(245, 0, 0), white);
+}
+.row[missingDependency] > button {
+    background-color: red;
+    color: white;
+    border-color: black;
+}
+.row[disabled] {
+    filter: opacity(50%);
+}
+
+.row > tr {
+    display: table;
+    height: 32px;
+}
+.row > tr > td {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.buttonSmall {
+    padding: 0.5em;
+    height: 32px;
+    font-size: 0.9em;
+}
+
+input[type="text"] {
+    width: calc(100% - 1em);
+    margin: 0;
+    padding: 1em 0.5em;
+    border: 0;
+    background-color: rgb(9, 132, 189);
+    color: white;
+    outline: 0;
+}
+input[type="text"]::placeholder {
+    color: #ddd;
+}
+input[type="text"]:focus, input[type="text"]:hover {
+    font-weight: bold;
+    background-color: rgb(9, 147, 211);
+} 
+
+#fixedBar {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: white;
+    box-shadow: 1px -1px 5px lightgrey;
+}
+
+#gameStarter {
+    float: right;
+    background-color: rgb(9, 132, 189);
+    color: white;
+}

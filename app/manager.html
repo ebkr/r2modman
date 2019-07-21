@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>r2modman</title>
+        <link href="design.css" type="text/css" rel="stylesheet" />
+    </head>
+    <body>
+        <div class="buttonFrame">
+            <button id="t0" selected>Installed Mods</button><button id="t1">Downloadable Mods</button><button id="t2">Other</button><button id="gameStarter">Play Risk of Rain 2</button>
+        </div>
+        <input id="searchBar" type="text" placeholder="Search:" />
+        <div>
+            <div id="installedList" data-tabAssoc="t0" selected></div>
+            <div id="downloadList" data-tabAssoc="t1" hidden></div>
+            <div id="optionsList" class="Container" data-tabAssoc="t2" hidden>
+                <div class="buttonFrame">
+                    <button id="addLocal">Add Local Mod</button> <button id="refresh">Refresh Mods</button>
+                </div>
+            </div>
+        </div>
+        <script src="code/mods/modinfo.js"></script>
+        <script src="code/mods/listManager.js"></script>
+    </body>
+</html>

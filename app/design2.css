@@ -1,0 +1,162 @@
+:root {
+    --borderSeparatorColour: #f5f5f5;
+    --selectionColour_: rgb(108, 218, 104);
+    --focusIndication_: rgb(208, 243, 215);
+
+    --rowHighlightColour: rgb(54, 147, 190);
+    --selectionColour: rgb(9, 147, 211);
+    --focusIndication: rgb(9, 147, 211);
+    --selectionTextColour: white;
+
+    --componentBorder: lightgrey;
+    --componentBorderText: #222;
+
+    --disabledColour: red;
+
+}
+
+html,body {
+    padding: 0;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+* {
+    outline-color: greenyellow;
+}
+
+*:focus {
+    outline: 1px dashed #222;
+}
+
+.row {
+    padding: 0.2em;
+    grid-column-gap: 1em;
+}
+.row:hover {
+    background-color: var(--rowHighlightColour); 
+    color: white;
+}
+.row[valid] {
+    display: grid;
+    grid-template-columns: max-content auto calc(120px + 1em);
+}
+.row[problematic] {
+    display: grid;
+    grid-template-columns: max-content auto 80px 40px;
+}
+.row[online] {
+    display: grid;
+    grid-template-columns: max-content auto 80px 40px;
+}
+.row[hidden] {
+    display: none;
+}
+.row[disabled] {
+    filter: opacity(50%);
+}
+.row > img {
+    width: 40px;
+    height: 40px;
+}
+.row > tr {
+    display: table;
+    height: 40px;
+}
+.row > tr > td {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.content {
+    max-height: 100vh;
+    overflow: auto;
+}
+
+
+/* Components */
+button {
+    display: inline-block;
+    background-color: inherit;
+    border: 1px solid var(--componentBorder);
+    color: inherit;
+    cursor: pointer;
+    padding: 0.5em;
+}
+button:hover, button:focus {
+    background-color: var(--componentBorder);
+    color: var(--componentBorderText);
+}
+
+select {
+    display: block;
+    background-color: inherit;
+    border: 1px solid var(--componentBorder);
+    width: 80px;
+    color: inherit;
+}
+option {
+    background-color: white;
+    color: black;
+}
+
+input[type="text"] {
+    padding: 1em;
+    border: 0;
+    border-bottom: 1px solid var(--borderSeparatorColour);
+}
+
+.topBar {
+    display: grid;
+    grid-template-columns: auto calc(120px + 1em);
+}
+.topBar > button {
+    background-color: var(--selectionColour);
+    color: white;
+}
+
+/* Navigation */
+.navRoot {
+    display: grid;
+    grid-template-columns: max-content auto;
+}
+
+#gameStarter {
+    margin-top: auto;
+}
+
+.nav {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--borderSeparatorColour);
+}
+.nav > *:not(br) {
+    display: block;
+    background-color: inherit;
+    border: 0;
+    padding: 1em;
+    border-bottom: 1px solid var(--borderSeparatorColour);
+    outline: 0;
+    width: calc(100%);
+    word-break: keep-all;
+    white-space: nowrap;
+    text-align: left;
+}
+.nav > *:not(br):hover, .nav > *:not(br):active, .nav > *:not(br):focus {
+    box-shadow: inset 5px 0px 0px var(--selectionColour);
+}
+.nav > *:not(br)[selected] {
+    background-color: var(--focusIndication);
+    box-shadow: inset 5px 0px 0px var(--selectionColour);
+    color: var(--selectionTextColour);
+}
+.nav > *:not(br)[disabled]:hover, .nav > *:not(br)[disabled]:active, .nav > *:not(br)[disabled]:focus {
+    box-shadow: inset 5px 0px 0px var(--disabledColour);
+    filter: blur(2px);
+    cursor: not-allowed;
+}
+
+.Container {
+    padding: 1em;
+}

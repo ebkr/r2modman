@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>r2modman</title>
+        <link href="design2.css" type="text/css" rel="stylesheet" />
+    </head>
+    <body class="navRoot">
+        <div id="nav" class="nav">
+            <button id="b1" selected>Installed</button>
+            <button id="b2">Downloadable</button>
+            <button id="b3">Settings</button>
+            <button id="gameStarter" class="selectedButton" alternatecontrol>Play Risk of Rain 2</button>
+        </div>
+        <div class="content">
+            <div id="topBar" class="topBar">
+                <input id="searchBar" type="text" placeholder="Search:"/>
+                <button id="addLocal">Add Local Mod</button>
+            </div>
+            <div id="d1" name="Installed"></div>
+            <div id="d2" name="Downloadable" hidden></div>
+            <div id="d3" name="Settings" hidden>
+                <div class="nav">
+                    <button id="associate">Associate 'Install with Mod Manager' button</button>
+                    <button id="refresh">Refresh Mods</button>
+                    <button id="exportProfile">Export Profile</button>
+                    <button id="importProfile">Import Profile</button>
+                    <button id="disableAll">Disable All Mods</button>
+                    <button id="enableAll">Enable All Mods</button>
+                    <button id="deleteAll">Remove All Installed Mods</button>
+                </div>
+            </div>
+        </div>
+        <script src="code/mods/modinfo.js"></script>
+        <script src="code/mods/listMgr2.js"></script>
+    </body>
+</html>

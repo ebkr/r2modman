@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>r2modman</title>
+        <link href="design.css" type="text/css" rel="stylesheet" />
+    </head>
+    <body class="hideOverflow Container">
+        <div id="SplashDescription">
+            <span>Downloading Mod</span>
+            <br/>
+            <sup id="modName">ModName</sup>
+        </div>
+        <div id="progressBar">
+            <div id="progressBarInner" class="animateSideToSide"></div>
+        </div>
+        <script>
+            document.getElementById("modName").innerHTML = (new URLSearchParams(window.location.search)).get("modName");
+        </script>
+    </body>
+</html>
