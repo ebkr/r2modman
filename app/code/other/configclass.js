@@ -70,6 +70,7 @@ class Configuration {
             }
         }
     }
+    
 }
 
 exports.Configuration = Configuration;

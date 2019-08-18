@@ -11,6 +11,8 @@ const conf = require("./app/code/other/configclass")
 const { execSync } = require('child_process');
 var regedit = require('regedit')
 
+var fetch = require("node-fetch");
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 var mainWindow;
@@ -20,6 +22,18 @@ var dir = path.join(process.execPath, "../", "mods", "profiles");
 var mHandler = new modHandler.ModHandler();
 var tsData = null;
 let downloadsInProgress = 0;
+
+let r2version = "2.1.0";
+
+// fetch("https://api.github.com/repos/ebkr/r2modman/releases/latest")
+// .then(res => res.buffer())
+// .then((res)=>{
+// 	return JSON.parse(res.toString())
+// }).then((res)=>{
+// 	let update_package_url = res.assets[0].browser_download_url;
+// 	let tagName = res.tag_name;
+// 	console.log(tagName);
+// })
 
 // Download using the ror2mm:// protocol
 function downloadModFromProtocol(protocol) {
@@ -49,8 +63,6 @@ function downloadModFromProtocol(protocol) {
 				}
 			}
 		}
-	} else {
-		alert("Invalid install link");
 	}
 } 
 
@@ -86,14 +98,21 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', function() {
-	// Only allow a single instance of the executable at a time
+	readyStartApplication();
+});
+
+// readyStartApplication called when auto-update has been checked.
+let readyStartApplication = ()=>{
 	let reqLockSuccess = app.requestSingleInstanceLock();
 	if (!reqLockSuccess) {
 		// If this isn't the single instance,
 		// connect to r2mm IPC and send the install parameter.
 		ipcServer.connectTo("r2mm", ()=>{
-			if (process.argv.length >= 2) {
-				ipcServer.of.r2mm.emit("install", process.argv[1]);
+			for (let i=0; i<process.argv.length; i++) {
+				if (process.argv[i].toLowerCase().search("ror2mm://") >= 0) {
+					ipcServer.of.r2mm.emit("install", process.argv[i]);
+					break;
+				}
 			}
 			app.quit();
 		});
@@ -110,7 +129,7 @@ app.on('ready', function() {
 		ipcServer.server.start();
 	}
 	createWindow();
-});
+}
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -142,7 +161,45 @@ ipcMain.on("splashFinished", (e, fetched) => {
 			preload: path.join(__dirname, 'preload.js')
 		}
 	}, 1)
-	mainWindow.loadFile('app/profiles.html');
+
+	let currentVersionString = r2version;
+	fetch("https://api.github.com/repos/ebkr/r2modman/releases/latest")
+	.then(res => res.buffer())
+	.then((res)=>{
+		return JSON.parse(res.toString())
+	}).then((res)=>{
+		if (currentVersionString !== res.tag_name) {
+			for (let assetIter=0; assetIter<res.assets.length; assetIter++) {
+				let asset = res.assets[assetIter];
+				if (asset.name === "app-update.zip") {
+					let update_package_url = res.assets[0].browser_download_url;
+					dialog.showMessageBox(mainWindow, {buttons:["Yes", "No"], message:"An update is available, would you like to update?"}, (resp) => {
+						if (resp === 0) {
+							// Update
+							mHandler.UpdateR2MM(asset.browser_download_url, (status, err)=>{
+								console.log("ERR:", err);
+								fs.removeSync(path.join(process.cwd(), "tmp"))
+								if (status) {
+									app.releaseSingleInstanceLock();
+									app.relaunch();
+									app.exit();
+								} else {
+									dialog.showErrorBox("Failed to update", err);
+								}
+							});
+						} else {
+							mainWindow.loadFile('app/profiles.html');
+						}
+					})
+				}
+			}
+		} else {
+			mainWindow.loadFile('app/profiles.html');
+		}
+	}).catch((e)=>{
+		console.log("Fetch err:", e);
+		mainWindow.loadFile('app/profiles.html');
+	})
 
 	// Bind getProfiles to window call
 	ipcMain.on('getProfiles', (e) => {
@@ -187,8 +244,11 @@ ipcMain.on("splashFinished", (e, fetched) => {
 	ipcMain.on("selectedProfile", (e, profile) => {
 		selectedProfile = profile;
 		startManagerWindow();
-		if (process.argv.length >= 2) {
-			downloadModFromProtocol(process.argv[1]);
+		for (let i=0; i<process.argv.length; i++) {
+			if (process.argv[i].toLowerCase().search("ror2mm://") >= 0) {
+				downloadModFromProtocol(process.argv[i]);
+				break;
+			}
 		}
 	});
 });
