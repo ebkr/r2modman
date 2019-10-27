@@ -37,7 +37,7 @@ class ModManager {
         GetModsByFilter: function(str, self) {
             let myArr = [];
             for (let i=0; i<self.installedMods.length; i++) {
-                if (self.installedMods[i].Name.toLowerCase().search(str) >= 0) {   
+                if (self.installedMods[i].Name.toLowerCase().search(str.toLowerCase()) >= 0) {   
                     myArr.push(self.installedMods[i]);
                 }
             }
@@ -102,7 +102,7 @@ class ModManager {
         GetModsByFilter: function(str, self) {
             let myArr = [];
             for (let i=0; i<self.availableMods.length; i++) {
-                if (self.availableMods[i].name.toLowerCase().search(str) >= 0) {
+                if (self.availableMods[i].name.toLowerCase().search(str.toLowerCase()) >= 0) {
                     myArr.push(self.availableMods[i]);
                 }
             }
