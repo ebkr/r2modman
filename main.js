@@ -23,7 +23,7 @@ var mHandler = new modHandler.ModHandler();
 var tsData = null;
 let downloadsInProgress = 0;
 
-let r2version = "2.1.0";
+let r2version = "2.1.1";
 
 // fetch("https://api.github.com/repos/ebkr/r2modman/releases/latest")
 // .then(res => res.buffer())
