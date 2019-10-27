@@ -157,6 +157,28 @@ function DrawDownloadable() {
     let modList = modManager.available.GetModsByFilter(searchBar.value, modManager);
     for (let i=0; i<modList.length; i++) {
 
+        // Check if mod should be excluded
+        if (modList[i].is_deprecated) {
+            continue;
+        } else {
+            let hasDeprecatedDependency = false;
+            for (nest=0; nest<modList[i].versions[0].dependencies.length; nest++) {
+                for (modNest=0; modNest<modList.length; modNest++) {
+                    if (modList[modNest].name === modList[i].versions[0].dependencies.name) {                    
+                        hasDeprecatedDependency = true;
+                        break;
+                    }
+                }
+                if (hasDeprecatedDependency) {
+                    break;
+                }
+            }
+            if (hasDeprecatedDependency) {
+                console.log(modList[modNest].name + " is_depped");
+                continue;
+            }
+        }
+
         // Store current iteration position
         let listPos = i;
         
