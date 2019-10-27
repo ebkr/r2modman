@@ -47,7 +47,7 @@ html,body {
 }
 .row[online] {
     display: grid;
-    grid-template-columns: max-content auto 80px 40px;
+    grid-template-columns: max-content auto max-content 80px 40px;
 }
 .row[hidden] {
     display: none;
@@ -113,6 +113,10 @@ input[type="text"] {
 .topBar > button {
     background-color: var(--selectionColour);
     color: white;
+}
+
+.spanRow {
+    padding: 0.5em;
 }
 
 /* Navigation */

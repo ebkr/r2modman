@@ -270,6 +270,7 @@ class ThunderstoreMod {
     versions        = []    // ThunderstoreVersion
     is_pinned       = false // Boolean
     is_deprecated   = false // Boolean
+    rating_score    = 0     // Integer
 
     FromJSON(json) {
         for (let prop in json) {

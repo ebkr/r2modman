@@ -177,6 +177,11 @@ function DrawDownloadable() {
         let text = document.createElement("span");
         text.innerHTML = modList[i].name;
 
+        // Ratings
+        let rating = document.createElement("span");
+        rating.innerHTML = (modList[i].rating_score || 0) + " &#9650;"
+        rating.className = "spanRow";
+
         // Version Select
         let storedVersions = {};
         let selection = document.createElement("select");
@@ -202,7 +207,8 @@ function DrawDownloadable() {
         row.appendChild(textOuter);
         textOuter.appendChild(textInner);
         textInner.appendChild(text);
-        row.appendChild(selection)
+        row.appendChild(rating);
+        row.appendChild(selection);
         row.appendChild(download);
 
         using.appendChild(row);
