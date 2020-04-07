@@ -1,3 +1,5 @@
+# [Superseded by r2modmanPlus](https://github.com/ebkr/r2modmanPlus)
+
 ![Logo](https://i.imgur.com/rdImc3h.png)
 
 ## r2modman : Risk of Rain 2 Mod Manager
